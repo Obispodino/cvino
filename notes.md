@@ -1,5 +1,9 @@
 Here is a comprehensive project plan for your data science capstone, structured around the 9-step framework you provided.
 
+These are internal notes to be deleted at the end, it works as a guide.
+
+To check out the data set, please visit: https://github.com/rogerioxavier/X-Wines
+
 ---
 
 ### **Step 1: Define Your Goal**
