@@ -3,7 +3,7 @@ Here is a comprehensive project plan for your data science capstone, structured 
 These are internal notes to be deleted at the end, it works as a guide.
 
 To check out the data set, please visit: https://github.com/rogerioxavier/X-Wines
-
+To download it https://drive.google.com/drive/folders/1LqguJNV-aKh1PuWMVx5ELA61LPfGfuu_?usp=drive_link
 ---
 
 ### **Step 1: Define Your Goal**
