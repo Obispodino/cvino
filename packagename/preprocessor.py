@@ -5,7 +5,7 @@ from pathlib import Path
 import ast
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, LabelEncoder, OneHotEncoder, OrdinalEncoder
 
-def clean_features(wd: pd.DataFrame, ratings: pd.DataFrame) -> pd.DataFrame:
+def wine_clean_features(wd: pd.DataFrame) -> pd.DataFrame:
     '''
     this function clean the input wine dataset and rating dataset
     input: wine dataset in pd.DataFrame format, ratings dataset in pd.DataFrame format
@@ -38,6 +38,10 @@ def clean_features(wd: pd.DataFrame, ratings: pd.DataFrame) -> pd.DataFrame:
 
     print("Wine dataset cleaning completed!")
 
+    return wines_clean
+
+def ratings_clean_features(ratings: pd.DataFrame, wines_clean: pd.DataFrame) -> pd.DataFrame:
+
     # DATA CLEANING STAGE : Clean Ratings Dataset
     print("=== CLEANING RATINGS DATASET ===")
 
@@ -59,8 +63,10 @@ def clean_features(wd: pd.DataFrame, ratings: pd.DataFrame) -> pd.DataFrame:
 
     print("Ratings dataset cleaning completed!")
 
+    return  ratings_clean
 
-def preprocess_features(wd: pd.DataFrame, ratings: pd.DataFrame) -> pd.DataFrame:
+
+def preprocess_features(features_df: pd.DataFrame, ratings_clean: pd.DataFrame, N_TOP_GRAPES) -> pd.DataFrame:
     '''
     this function preprocess the features from wine dataset including scaling,
     encode featuers and merge rating dataframe to wine dataframe
@@ -69,22 +75,17 @@ def preprocess_features(wd: pd.DataFrame, ratings: pd.DataFrame) -> pd.DataFrame
     # DATA CLEANING STAGE - Step 4: Prepare Features for k-NN Model
     print("=== PREPARING FEATURES FOR k-NN MODEL ===")
 
-    # Create feature matrix
-    features_df = wines_clean.copy()
-
     # 1. Process categorical variables
     print("Processing categorical variables...")
 
     # a. OneHotEncode Type column
-    print("- One-hot encoding wine types...")
     type_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
     type_encoded = type_encoder.fit_transform(features_df[['Type']])
     type_columns = [f'Type_{cat}' for cat in type_encoder.categories_[0]]
     type_df = pd.DataFrame(type_encoded, columns=type_columns, index=features_df.index)
 
     # b. Process Grapes (extract top N grapes)
-    print("- Processing grape varieties...")
-    N_TOP_GRAPES = 30  # Consider top 30 grape varieties
+    N_TOP_GRAPES = N_TOP_GRAPES  # Consider top 50 grape varieties
 
     # Get most common grape varieties
     all_grapes = [grape for sublist in features_df['Grapes_list'] for grape in sublist if isinstance(sublist, list)]
@@ -99,7 +100,6 @@ def preprocess_features(wd: pd.DataFrame, ratings: pd.DataFrame) -> pd.DataFrame
     grape_columns = [f'Grape_{grape}' for grape in top_grapes]
 
     # c. Ordinal encode Body and Acidity
-    print("- Ordinal encoding Body and Acidity...")
     # Define the order for Body
     body_categories = ['Very light-bodied', 'Light-bodied', 'Medium-bodied', 'Full-bodied', 'Very full-bodied']
     body_encoder = OrdinalEncoder(categories=[body_categories])
@@ -138,6 +138,7 @@ def preprocess_features(wd: pd.DataFrame, ratings: pd.DataFrame) -> pd.DataFrame
     wine_stats.columns = ['avg_rating', 'rating_count', 'rating_std']
     wine_stats = wine_stats.fillna(0)
 
+
     # Merge with wine features
     features_df = features_df.merge(wine_stats, left_on='WineID', right_index=True, how='left')
     features_df[['avg_rating', 'rating_count', 'rating_std']] = features_df[['avg_rating', 'rating_count', 'rating_std']].fillna(0)
@@ -164,3 +165,5 @@ def preprocess_features(wd: pd.DataFrame, ratings: pd.DataFrame) -> pd.DataFrame
 
     # Update the feature_columns variable to include all columns
     feature_columns = X_scaled_df.columns.tolist()
+
+    return X_scaled_df
