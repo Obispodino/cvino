@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import os
-
+import ast
 # Set up page
-st.set_page_config(page_title="🍷 CVINO", layout="wide")
-st.title("🍷CVINO")
+st.set_page_config(page_title="🍷 CvalVino", layout="wide")
+st.title("🍷CvalVino")
 
 # === Load the dataset ===
 @st.cache_data
@@ -20,7 +20,8 @@ col1, col2 = st.columns(2)
 
 # Grape input
 with col1:
-    grape_input = st.text_input("Grape", placeholder="e.g., Merlot")
+    grape_input = st.text_input("Grape", placeholder="e.g., Merlot, Cabernet Sauvignon")
+    wine_name_input = st.text_input("Wine Name", placeholder="e.g., Château Margaux")
 
 # Wine type dropdown
 with col2:
@@ -50,7 +51,13 @@ with col4:
     )
 
 # Number of recommendations (below filters)
-num_recommendations = st.slider("Number of Recommendations", 1, 20, 5)
+num_recommendations = st.number_input(
+    "How many wine recommendations would you like to see?",
+    min_value=1,
+    max_value=50,
+    value=10,  # default value
+    step=1
+)
 
 # === Filter logic ===
 filtered_df = df.copy()
@@ -70,7 +77,7 @@ st.subheader("🍇 Recommended Wines")
 if filtered_df.empty:
     st.warning("No matching wines found. Try changing the filters.")
 else:
-    top_wines = filtered_df[["WineName", "Grapes", "Body", "ABV", "RegionName", "Country"]].head(10)
+    top_wines = filtered_df[["WineName", "Grapes", "Body", "ABV", "RegionName", "Country","Harmonize"]].head(num_recommendations)
 
     for index, row in top_wines.iterrows():
         with st.container():
@@ -80,10 +87,11 @@ else:
             with cols[1]:
                 st.markdown(f"""
                     ### {row['WineName']}
-                    - **Grapes**: {row['Grapes']}
+                    - **Grapes**: {", ".join(ast.literal_eval(row['Grapes'])) if isinstance(row['Grapes'], str) and row['Grapes'].startswith("[") else row['Grapes']}
                     - **Body**: {row['Body']}
                     - **ABV**: {row['ABV']}%
                     - **Region**: {row['RegionName']}
                     - **Country**: {row['Country']}
+                    - **Food Recommendation**: {row['Harmonize']}
                     """)
                 st.markdown("---")
