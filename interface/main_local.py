@@ -4,10 +4,10 @@ import pandas as pd
 from pathlib import Path
 import ipdb
 
-from packagename.recommendation import get_wine_recommendations_by_characteristics
-from packagename.geocode_regions import geocode_regions
-from packagename.preprocessor import wine_clean_features, ratings_clean_features, preprocess_features
-from packagename.model import train_model
+from cv_functions.recommendation import get_wine_recommendations_by_characteristics
+from cv_functions.geocode_regions import geocode_regions
+from cv_functions.preprocessor import wine_clean_features, ratings_clean_features, preprocess_features
+from cv_functions.model import train_model
 
 # load data
 LOCAL_DATA_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino", "raw_data", "last")
