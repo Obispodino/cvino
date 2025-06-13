@@ -213,7 +213,7 @@ def main():
     # api_key = "your-anthropic-api-key-here"
 
     # Example image path
-    image_path = "/Users/dino/code/Obispodino/cvino/raw_data/X-Wines_Official_Repository/last/XWines_Slim_1K_labels/195300.jpeg"
+    image_path = "/Users/dino/code/Obispodino/cvino/raw_data/X-Wines_Official_Repository/last/XWines_Slim_1K_labels/112201.jpeg"
 
     # Extract wine information
     result = extract_wine_info_from_image(image_path)
