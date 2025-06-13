@@ -6,80 +6,129 @@ import ast
 # === Set up page ===
 st.set_page_config(page_title="🍇 CvalVino", layout="wide")
 
-# === Add custom styling ===
-st.markdown(
-    """
-    <style>
-    /* Set elegant wine background */
-    html, body, [data-testid="stAppViewContainer"] {
-        background-color: #722F37;
-        color: #FFFFFF;
-    }
 
-    h1, h2, h3, h4 {
-        color: #FFFFFF;
-        font-family: 'Georgia', serif;
-    }
+# Add CSS once
+st.markdown("""<style>
 
-    .stContainer {
-        background-color: #F4A6B1;
-        padding: 15px;
-        border-radius: 15px;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.4);
-        margin-bottom: 20px;
-    }
+/* === GLOBAL STYLES === */
+html, body, [data-testid="stAppViewContainer"] {
+    background-color: #722F37;
+    color: #FFFFFF;
+}
 
-    /* Force black style specifically on the food button */
-    button:has(span:contains("Get Wine Recommendation by Food")) {
-        background-color: #000 !important;
-        color: white !important;
-        font-weight: bold;
-        border: none !important;
-        box-shadow: none !important;
-    }
+h1, h2, h3, h4 {
+    color: #FFFFFF;
+    font-family: 'Georgia', serif;
+}
 
-    button:has(span:contains("Get Wine Recommendation by Food")):hover {
-        background-color: #222 !important;
-        color: white !important;
-    }
+.stContainer {
+    background-color: #F4A6B1;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.4);
+    margin-bottom: 20px;
+}
 
-    /* Force all markdown and label text to white */
-    label,
-    .css-1aumxhk,
-    .css-1cpxqw2,
-    .css-1v0mbdj,
-    .css-1d391kg,
-    .css-10trblm,
-    .css-qrbaxs,
-    .css-1v3fvcr,
-    .css-ffhzg2,
-    .e1nzilvr5,
-    .e1nzilvr1 {
-        color: #FFFFFF !important;
-    }
+/* === FORM INPUTS === */
+.stTextInput input,
+.stSelectbox div[data-baseweb="select"] > div,
+.stNumberInput input {
+    background-color: white !important;
+    color: black !important;
+}
 
-    label[data-testid="stSelectboxLabel"] {
-        color: #FFFFFF !important;
-        font-weight: bold;
-    }
+.stSlider > div {
+    background-color: transparent !important;
+    color: white !important;
+    padding: 0 !important;
+    height: auto !important;
+}
 
-    /* Make input/select boxes white */
-    .stTextInput input,
-    .stSelectbox div[data-baseweb="select"] > div,
-    .stNumberInput input,
-    .stSlider,
-    .stSlider > div {
-        background-color: white !important;
-        color: black !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+.stSlider span {
+    color: white !important;
+}
 
+label,
+.css-1aumxhk,
+.css-1cpxqw2,
+.css-1v0mbdj,
+.css-1d391kg,
+.css-10trblm,
+.css-qrbaxs,
+.css-1v3fvcr,
+.css-ffhzg2,
+.e1nzilvr5,
+.e1nzilvr1 {
+    color: #FFFFFF !important;
+}
 
+label[data-testid="stSelectboxLabel"] {
+    color: #FFFFFF !important;
+    font-weight: bold;
+}
 
+/* === BUTTONS === */
 
+/* All primary buttons */
+button[kind='primary'] {
+    background-color: black !important;
+    color: white !important;
+    border: none !important;
+    font-weight: bold;
+    border-radius: 0.5rem;
+    padding: 0.4rem 1rem;
+    transition: all 0.3s ease;
+}
+
+button[kind='primary']:active,
+button[kind='primary']:focus {
+    background-color: black !important;
+    color: white !important;
+    box-shadow: none !important;
+}
+
+/* All Streamlit buttons (including secondary or default) */
+.stButton button {
+    background-color: #722F37 !important;
+    color: #FFFFFF !important;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+.stButton button:hover {
+    background-color: #8B3A42 !important;
+    color: #FFFFFF !important;
+    transform: scale(1.05);
+}
+
+/* Specific style for the food button */
+button[aria-label='food_button'] {
+    background-color: #000 !important;
+    color: #FFFFFF !important;
+    font-weight: bold;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+button[aria-label='food_button']:hover {
+    background-color: #222 !important;
+    color: #FFFFFF !important;
+    transform: scale(1.05);
+}
+
+</style>""", unsafe_allow_html=True)
+
+st.markdown("""
+    <h1 style='text-align: center; color: white; font-family: Georgia, serif; font-size: 60px; margin-top: 0;'>
+        🍇🍷 <b>CvalVino</b> 🍷🍇
+    </h1>
+    <p style='text-align: center; color: white; font-family: Georgia, serif; font-size: 18px; margin-top: -10px;'>
+        Your Elegant Wine Recommender
+    </p>
+""", unsafe_allow_html=True)
 # === Load the dataset ===
 @st.cache_data
 def load_data():
@@ -107,18 +156,26 @@ def get_unique_foods(df):
 unique_foods = get_unique_foods(df)
 
 # === Title and navigation ===
-st.title(":wine_glass: CvalVino")
+
 
 if not st.session_state.food_page:
     if st.button("🍽️ Get Wine Recommendation by Food"):
         st.session_state.food_page = True
 
 # === Food Recommendation Page ===
+import ast
+
 if st.session_state.food_page:
     st.header("🍽️ Food-Based Wine Recommendation")
 
-    food_input = st.selectbox("Choose a food to get wine recommendations:", unique_foods, key="food_input")
+    # Original layout: dropdown and button in sequence
+    food_input = st.selectbox(
+        "Choose a food to get wine recommendations:",
+        unique_foods,
+        key="food_input"
+    )
 
+    # Original working button
     if st.button("🔎 Recommend Wines"):
         if food_input.strip():
             food_wines = df[df["Harmonize"].apply(
@@ -150,10 +207,14 @@ if st.session_state.food_page:
         else:
             st.warning("Please enter a food.")
 
+    # Back button
     if st.button("🔙 Back to Main Page"):
         st.session_state.food_page = False
         del st.session_state["food_input"]
         st.rerun()
+
+
+
 
 # === Main Wine Filters Page ===
 if not st.session_state.food_page:
