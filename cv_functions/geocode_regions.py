@@ -7,7 +7,7 @@ from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 
 
-def geocode_regions(df, region_column='RegionName',country_column = 'Country', cache_file='geocoding_cache.pkl', min_delay=1.0):
+def geocode_regions(df, region_column='RegionName',country_column = 'Country', cache_file='./raw_data/geocoding_cache.pkl', min_delay=1.0):
     """
     Geocode region names with caching and rate limiting
 
