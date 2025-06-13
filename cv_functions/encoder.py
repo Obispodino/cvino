@@ -4,11 +4,13 @@ import pickle
 import os
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, OrdinalEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
-from transformers.top_k_encoder import TopKOneHotEncoder
+from transformers.top_k_encoder import TopNGrapeOneHotEncoder
 from transformers.body_ordinal_encoder import BodyOrdinalEncoder
 from transformers.acid_ordinal_encoder import AcidOrdinalEncoder
+import ipdb
+
 
 LOCAL_DATA_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino","models")
 preprocessor_file = os.path.join(LOCAL_DATA_PATH, "preprocessor.pkl")
@@ -62,6 +64,16 @@ def Encoder_features_fit_transform(df:pd.DataFrame):
     acidity_categories = [['Low', 'Medium', 'High']]
     numeric_features = ['ABV','latitude', 'longitude']
 
+    body_encoder_pipeline = Pipeline([
+    ('imputer', SimpleImputer(strategy='constant', fill_value='Medium-bodied')),
+    ('ordinal', OrdinalEncoder(categories=body_categories))
+    ])
+
+    acidity_encoder_pipeline = Pipeline([
+    ('imputer', SimpleImputer(strategy='constant', fill_value='Medium')),
+    ('ordinal', OrdinalEncoder(categories=acidity_categories))
+    ])
+
     # make sure number columns have medium for missing values
     numeric_pipeline = Pipeline(steps=[
     ('imputer', SimpleImputer(strategy='median')),  # or 'mean'
@@ -73,16 +85,18 @@ def Encoder_features_fit_transform(df:pd.DataFrame):
     preprocessor = ColumnTransformer(
     transformers=[
         ('Type', type_encoder, ['Type']),
-        ('Grape', TopKOneHotEncoder(top_k=10), ['Grapes_list']),
-        ('Body', BodyOrdinalEncoder(column='Body', categories=body_categories, fallback='Medium-bodied',output_name='Body_encoded'), ['Body']),
-        ('Acidity', AcidOrdinalEncoder(column='Acidity', categories=acidity_categories, fallback='Medium',output_name='Acidity_encoded'), ['Acidity']),
-        ('num', numeric_pipeline, numeric_features)
+        ('Grape', TopNGrapeOneHotEncoder(top_n=50), ['Grapes_list']),
+        ('Body', body_encoder_pipeline, ['Body']),
+        ('Acidity', acidity_encoder_pipeline, ['Acidity']),
+        ('num', numeric_pipeline, numeric_features),
     ],
     remainder='passthrough',
     n_jobs=-1,
     )
 
+    #preprocessor.set_output(transform='pandas')
     preprocessor.fit(df)
+
     #save preprocessor into pickle
 
     with open(preprocessor_file, 'wb') as f:
@@ -93,9 +107,26 @@ def Encoder_features_fit_transform(df:pd.DataFrame):
     columns_names = get_feature_names_out(preprocessor)
 
     # change column names
-    column_names = ['Body_encoded' if col == 'Body' else col for col in column_names]
-    column_names = ['Acidity_encoded' if col == 'Acidity' else col for col in column_names]
-    X_df = pd.DataFrame(df_processed, columns=column_names, index=df.index)
+    columns_names = ['Body_encoded' if col == 'Body' else col for col in columns_names]
+    columns_names = ['Acidity_encoded' if col == 'Acidity' else col for col in columns_names]
+    X_df = pd.DataFrame(df_processed, columns=columns_names, index=df.index)
+
+    # # everything about grapes
+    # N_TOP_GRAPES = 60  # Consider top 60 grape varieties
+
+    # # Get most common grape varieties
+    # all_grapes = [grape for sublist in X_df['Grapes_list'] for grape in sublist if isinstance(sublist, list)]
+    # top_grapes = pd.Series(all_grapes).value_counts().head(N_TOP_GRAPES).index.tolist()
+    # #ipdb.set_trace()
+    # # Create binary columns for each top grape
+    # for grape in top_grapes:
+    #     X_df[f'Grape_{grape}'] = X_df['Grapes_list'].apply(
+    #         lambda x: 1 if isinstance(x, list) and grape in x else 0
+    #     )
+
+    # grape_columns = [f'Grape_{grape}' for grape in top_grapes]
+
+
 
     return X_df
 
@@ -103,8 +134,10 @@ def Encoder_features_transform(df:pd.DataFrame):
 
     with open(preprocessor_file, 'rb') as f:
         preprocessor = pickle.load(f)
+
+    #preprocessor.set_output(transform='pandas')
     df_processed = preprocessor.transform(df)
-    column_names = get_feature_names(preprocessor)
+    column_names = get_feature_names_out(preprocessor)
     # change column names
     column_names = ['Body_encoded' if col == 'Body' else col for col in column_names]
     column_names = ['Acidity_encoded' if col == 'Acidity' else col for col in column_names]

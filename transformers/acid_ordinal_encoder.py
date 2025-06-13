@@ -8,6 +8,7 @@ class AcidOrdinalEncoder(BaseEstimator, TransformerMixin):
         self.categories = categories  # must be list of lists for OrdinalEncoder
         self.fallback = fallback
         self.output_name = output_name
+        self._transform_output = None  # to track output format
 
     def fit(self, X, y=None):
         # Use a copy of categories to avoid modifying the original parameter
@@ -27,5 +28,15 @@ class AcidOrdinalEncoder(BaseEstimator, TransformerMixin):
         X_copy[self.column] = X_copy[self.column].where(
             X_copy[self.column].isin(self.categories), self.fallback
         )
+
         encoded = self.encoder_.transform(X_copy[[self.column]])
-        return pd.DataFrame(encoded, columns=[self.output_name], index=X.index)
+
+        if self._transform_output == 'pandas':
+            return pd.DataFrame(encoded, columns=[self.output_name], index=X.index)
+        else:
+            return encoded  # returns a NumPy array
+
+
+    def set_output(self, *, transform=None):
+        self._transform_output = transform
+        return self
