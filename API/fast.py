@@ -1,66 +1,33 @@
-# TODO: Import your package, replace this by explicit imports of what you need
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import os
 
+# 🔐 API Key for basic security
+# API_KEY = "super-secret-key"  # ⚠️ Change this for production
+
 app = FastAPI()
 
-# CORS middleware (to allow access from frontend apps)
+# Enable CORS (adjust origins for production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development; restrict in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Try to load the model if it exists
-model = None
-model_path = "model.joblib"
-if os.path.exists(model_path):
+# 🔄 Load the trained model from pkl
+try:
+    model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "trained_model_Dino.pkl"))
     model = joblib.load(model_path)
-    print("✅ Model loaded successfully.")
-else:
-    print("⚠️ Warning: model.joblib not found. Predictions will not work.")
+    print("✅ Model loaded from trained_model_Dino.pkl")
+except Exception as e:
+    model = None
+    print(f"⚠️ Could not load model: {e}")
 
-# Root endpoint
+# 🔹 Root endpoint
 @app.get("/")
 def root():
     return {"message": "Hi, the API is running!"}
-
-# GET endpoint for quick testing
-@app.get("/predict")
-def get_predict(input_one: float, input_two: float):
-    if not model:
-        return {"error": "Model not loaded."}
-    try:
-        prediction = model.predict([[input_one, input_two]])[0]
-        return {
-            "prediction": int(prediction),
-            "inputs": {
-                "input_one": input_one,
-                "input_two": input_two
-            }
-        }
-    except Exception as e:
-        return {"error": str(e)}
-
-# POST endpoint for JSON-based predictions
-class PredictionRequest(BaseModel):
-    input_one: float
-    input_two: float
-
-@app.post("/predict")
-def predict_post(request: PredictionRequest):
-    if not model:
-        return {"error": "Model not loaded."}
-    try:
-        prediction = model.predict([[request.input_one, request.input_two]])[0]
-        return {
-            "prediction": int(prediction),
-            "inputs": request.dict()
-        }
-    except Exception as e:
-        return {"error": str(e)}

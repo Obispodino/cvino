@@ -1,18 +1,18 @@
-# Use official Python image
-FROM python:3.11
+FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
-COPY . .
+# Copy application files
+COPY API/ ./API/
+COPY cv_functions/ ./cv_functions/
+COPY trained_model_Dino.pkl .
 
-# Expose the API port
-EXPOSE 8000
+# Expose FastAPI's port
+EXPOSE 8080
 
-# Run the FastAPI app via uvicorn
-CMD ["uvicorn", "API.fast:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run FastAPI with uvicorn
+CMD ["uvicorn", "API.fast:app", "--host", "0.0.0.0", "--port", "8080"]
