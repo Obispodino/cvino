@@ -10,6 +10,7 @@ class RatingsStatsAggregator(BaseEstimator, TransformerMixin):
         self.scale = scale
         self.ratings_stats_ = None
         self.scaler = MinMaxScaler() if scale else None
+        self._transform_output = None
 
     def fit(self, X=None, y=None):
         # Compute aggregated rating statistics
@@ -19,6 +20,7 @@ class RatingsStatsAggregator(BaseEstimator, TransformerMixin):
             .round(2)
         )
         stats.columns = ['avg_rating', 'rating_count', 'rating_std']
+        self.output_columns = ['avg_rating', 'rating_count', 'rating_std']
         stats = stats.fillna(0)
 
         # Save unscaled stats for merging
@@ -45,3 +47,10 @@ class RatingsStatsAggregator(BaseEstimator, TransformerMixin):
             X[['avg_rating', 'rating_count', 'rating_std']] = scaled
 
         return X
+
+    def set_output(self, *, transform=None):
+        self._transform_output = transform
+        return self
+
+    def get_feature_names_out(self, input_features=None):
+        return self.output_columns

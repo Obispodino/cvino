@@ -76,3 +76,14 @@ def geocode_regions(df, region_column='RegionName',country_column = 'Country', c
     df['longitude'] = df[region_column].map(lambda x: geocode_cache.get(x, {}).get('longitude'))
 
     return df #.drop(columns=[region_column])
+
+def retrieve_coordinate(region, cache_file='./raw_data/geocoding_cache.pkl', min_delay=1.0):
+    cache_path = Path(cache_file)
+
+    with open(cache_path, 'rb') as f:
+        geocode_cache = pickle.load(f)
+
+    lat_lon = geocode_cache.get(region, {'latitude': np.nan, 'longitude': np.nan})
+    latitude, longitude = lat_lon['latitude'], lat_lon['longitude']
+
+    return latitude, longitude

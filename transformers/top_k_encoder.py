@@ -3,7 +3,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import ipdb
 
 class TopNGrapeOneHotEncoder(BaseEstimator, TransformerMixin):
-    def __init__(self, top_n=50, output_prefix='Grape'):
+    def __init__(self, top_n=1, output_prefix='Grape'):
         self.top_n = top_n
         self.output_prefix = output_prefix
         self.top_grapes = []
