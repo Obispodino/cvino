@@ -34,7 +34,9 @@ def Encoder_features_fit_transform(df:pd.DataFrame):
     '''
     body_categories = [['Very light-bodied', 'Light-bodied', 'Medium-bodied', 'Full-bodied', 'Very full-bodied']]
     acidity_categories = [['Low', 'Medium', 'High']]
-    numeric_features = ['ABV','latitude', 'longitude']
+    numeric_features = ['ABV','latitude', 'longitude', 'avg_rating', 'rating_count', 'rating_std']
+
+    type_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
 
     body_encoder_pipeline = Pipeline([
     ('imputer', SimpleImputer(strategy='constant', fill_value='Medium-bodied')),
@@ -52,17 +54,12 @@ def Encoder_features_fit_transform(df:pd.DataFrame):
     ('scaler', MinMaxScaler())
     ])
 
-    type_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
-    ratings_aggregator = RatingsStatsAggregator(df)
-
-    #ipdb.set_trace()
     preprocessor = ColumnTransformer(
     transformers=[
         ('Type', type_encoder, ['Type']),
-        ('Grape', TopNGrapeOneHotEncoder(top_n=1), ['Grapes_list']),
+        ('Grape', TopNGrapeOneHotEncoder(top_n=60), ['Grapes_list']),
         ('Body', body_encoder_pipeline, ['Body']),
         ('Acidity', acidity_encoder_pipeline, ['Acidity']),
-        ('Rates', ratings_aggregator, ['Rating', 'WineID']),
         ('num', numeric_pipeline, numeric_features),
     ],
     remainder='passthrough',
@@ -70,15 +67,17 @@ def Encoder_features_fit_transform(df:pd.DataFrame):
     )
 
     #preprocessor.set_output(transform='pandas')
+
     preprocessor.fit(df)
 
     #save preprocessor into pickle
     with open(preprocessor_file, 'wb') as f:
         pickle.dump(preprocessor, f)
 
+
     df_processed = preprocessor.transform(df)
     print("Shape of transformed array:", df_processed.shape)
-    ipdb.set_trace()
+
     #columns_names = preprocessor.get_feature_names_out()
 
     columns_names = get_feature_names_out(preprocessor)

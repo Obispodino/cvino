@@ -5,29 +5,30 @@ from cv_functions.geocode_regions import retrieve_coordinate
 import ipdb
 import os
 import numpy as np
-
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 def get_wine_recommendations_by_characteristics(df,
-    wine_type='Red',                # Wine type (Red, White, Rosé, Sparkling, etc.)
-    grape_varieties='Syrah/Shiraz',       # Grape varieties (single string or list)
-    body='Full-bodied',           # Body ['Very light-bodied', 'Light-bodied', 'Medium-bodied', 'Full-bodied', 'Very full-bodied']
-    acidity='Medium',               # Acidity (Low, Medium, High)
-    abv=14.0,                       # Alcohol by volume percentage
-    country='Australia',               # Country of origin
-    region_name='Maule Valley',  # Region name
+    wine_type='Red',                   # Wine type (Red, White, Rosé, Sparkling, Dessert, Dessert/Port etc.)
+    grape_varieties='Malbec',          # Grape varieties (single string or list)
+    body='Full-bodied',              #['Very light-bodied', 'Light-bodied', 'Medium-bodied', 'Full-bodied', 'Very full-bodied']
+    abv=12.0,                          # Alcohol by volume percentage, min 0, max 50
+    acidity=None,                      # Optional - Acidity (Low, Medium, High)
+    country="Argentina",                      # Optional - Country of origin
+    region_name=None,
     n_recommendations=5             # Number of recommendations to return
 ):
 
 
     # if there's an entry in region_name
+    latitude_in = 0
+    longitude_in = 0
     if region_name is not None:
         latitude, longitude = retrieve_coordinate(region_name) # get coordinate from cache
         if not np.isnan(latitude):
             latitude_in = latitude
             longitude_in = longitude
-    else:
-        latitude_in = [42.965916],
-        longitude_in = [2.8390454],
+
 
 
     # create a DataFrame
@@ -45,8 +46,13 @@ def get_wine_recommendations_by_characteristics(df,
     rating_count = [0],
     rating_std = [0]
     ))
-    ipdb.set_trace()
-    wine_proccessed = Encoder_features_transform(X_pred)
+    #ipdb.set_trace()
+    # turn all None into np.nan so it can be inputed to default values
+    X_pred_cleaned = X_pred.replace({None: np.nan})
+
+    # transfor an dencode the incoming data
+    wine_proccessed = Encoder_features_transform(X_pred_cleaned)
+    # load knn model
     knn_model = load_model()
 
     # Get extra recommendations to account for filtering
@@ -67,6 +73,7 @@ def get_wine_recommendations_by_characteristics(df,
     distance_map = {wine_id: dist for wine_id, dist in zip(recommended_wine_ids, distances[0])}
     recommended_wines['Similarity'] = recommended_wines['WineID'].map(lambda wine_id: 1 - distance_map[wine_id])
 
+    result = recommended_wines
     # Filter by country if specified
     if country:
         country_matches = recommended_wines[recommended_wines['Country'] == country]
@@ -76,6 +83,7 @@ def get_wine_recommendations_by_characteristics(df,
             print(f"Warning: No wines found from '{country}'. Showing wines from all countries.")
 
         # Sort by similarity and limit results
+
         result = recommended_wines.sort_values('Similarity', ascending=False).head(n_recommendations)
 
     if result.empty:
@@ -88,13 +96,27 @@ if __name__ == "__main__":
     LOCAL_DATA_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino", "raw_data")
     wine_scaled_df = pd.read_csv(os.path.join(LOCAL_DATA_PATH, 'wine_lookup.csv'))
 
-    recommended_wines = get_wine_recommendations_by_characteristics(wine_scaled_df,     wine_type='Red',                # Wine type (Red, White, Rosé, Sparkling, etc.)
+    recommended_wines = get_wine_recommendations_by_characteristics(wine_scaled_df,
+    wine_type='Red',                # Wine type (Red, White, Rosé, Sparkling, etc.)
     grape_varieties='Syrah/Shiraz',       # Grape varieties (single string or list)
     body='Full-bodied',           # Body ['Very light-bodied', 'Light-bodied', 'Medium-bodied', 'Full-bodied', 'Very full-bodied']
     acidity='Medium',               # Acidity (Low, Medium, High)
     abv=14.0,                       # Alcohol by volume percentage
-    country='Australia',               # Country of origin
-    region_name='Maule Valley',  # Region name
+    country=None,               # Country of origin
+    region_name=None,  # Region name
     n_recommendations=5  )
 
-    recommended_wines
+    #ipdb.set_trace()
+    if not recommended_wines.empty:
+        print("Recommended wines based on your preferences:")
+        for i, (_, wine) in enumerate(recommended_wines.iterrows(), 1):
+            grapes_str = ', '.join(wine['Grapes_list']) if isinstance(wine['Grapes_list'], list) else 'Unknown'
+            print(f"{i}. {wine['WineName']} ({wine['Country']}, {wine['Type']})")
+            print(f"   Region: {wine['RegionName'] or 'Unknown'}")
+            print(f"   Grapes: {grapes_str}")
+            print(f"   Body: {wine['Body'] or 'Unknown'}, Acidity: {wine['Acidity'] or 'Unknown'}")
+            print(f"   Rating: {wine['avg_rating']:.1f}/5")
+            print(f"   Similarity: {wine['Similarity']:.2f}")
+            print()
+    else:
+        print("No recommendations found. Try adjusting your preferences.")
