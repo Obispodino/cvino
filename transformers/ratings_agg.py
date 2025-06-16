@@ -27,9 +27,4 @@ def Rates_aggregator(ratings_df: pd.DataFrame) -> pd.DataFrame:
     wine_stats.columns = ['WineID','avg_rating', 'rating_count', 'rating_std']
     wine_stats = wine_stats.fillna(0)
 
-    # # Merge with wine features
-    # features_df = features_df.merge(wine_stats, left_on='WineID', right_index=True, how='left')
-    # features_df[['avg_rating', 'rating_count', 'rating_std']] = features_df[['avg_rating', 'rating_count', 'rating_std']].fillna(0)
-    # rating_columns = ['avg_rating', 'rating_count', 'rating_std']
-
     return wine_stats

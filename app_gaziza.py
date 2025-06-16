@@ -89,20 +89,17 @@ button[kind='primary']:focus {
 
 /* All Streamlit buttons (including secondary or default) */
 .stButton button {
-    background-color: #c24f5d !important;
+    background-color: #722F37 !important;
     color: #FFFFFF !important;
     font-weight: bold;
     border: none;
     border-radius: 5px;
-    padding: 20px 20px;
+    padding: 10px 20px;
     transition: all 0.3s ease;
-    width: 100% !important;
-    min-width: 180px;
-    max-width: 100%;
 }
 
 .stButton button:hover {
-    background-color: #eb919c !important;
+    background-color: #8B3A42 !important;
     color: #FFFFFF !important;
     transform: scale(1.05);
 }
@@ -135,33 +132,17 @@ st.markdown("""
 # === Load the dataset ===
 @st.cache_data
 def load_data():
-    # change to wine_loopup.csv ################################################################################################
     file_path = os.path.join("raw_data", "last", "XWines_Full_100K_wines.csv")
-    # change to wine_loopup.csv################################################################################################
     return pd.read_csv(file_path)
 
 df = load_data()
 
 # create a Country vs Region lookup dictionary
 
-country_to_regions = (
-    df.groupby('Country')['RegionName']
-    .apply(lambda x: list(dict.fromkeys(x)))  # removes duplicates, keeps order
-    .to_dict()
-)
-
-region_to_country = {
-    region: country
-    for country, regions in country_to_regions.items()
-    for region in regions}
-
 
 # === Session state for page navigation ===
 if "food_page" not in st.session_state:
     st.session_state.food_page = False
-
-if "wine_page" not in st.session_state:
-    st.session_state.wine_page = True
 
 # === Extract unique foods from Harmonize column ===
 @st.cache_data
@@ -177,18 +158,12 @@ def get_unique_foods(df):
 
 unique_foods = get_unique_foods(df)
 
-# === create  buttons ===
-col1, col2 = st.columns([1, 1])
+# === Title and navigation ===
 
-with col1:
+
+if not st.session_state.food_page:
     if st.button("🍽️ Get Wine Recommendation by Food"):
         st.session_state.food_page = True
-        st.session_state.wine_page = False
-
-with col2:
-    if st.button("🍷 Get Wine Recommendation by Characteristics"):
-        st.session_state.wine_page = True
-        st.session_state.food_page = False
 
 # === Food Recommendation Page ===
 import ast
@@ -235,10 +210,17 @@ if st.session_state.food_page:
         else:
             st.warning("Please enter a food.")
 
+    # Back button
+    if st.button("🔙 Back to Main Page"):
+        st.session_state.food_page = False
+        del st.session_state["food_input"]
+        st.rerun()
+
+
 
 
 # === Main Wine Filters Page ===
-if st.session_state.wine_page:
+if not st.session_state.food_page:
     st.subheader("🔎 Enter your wine preferences")
 
     col1, col2 = st.columns(2)
@@ -255,18 +237,12 @@ if st.session_state.wine_page:
             else:
                 st.warning("No wines found for that grape.")
 
+        country_input = st.selectbox("Country", df["Country"].dropna().unique().tolist())
 
-        country_options = sorted(df["Country"].dropna().unique().tolist())
-        country_input = st.selectbox("Country", country_options)
+
     with col2:
-
         wine_type_input = st.selectbox("Type", df["Type"].dropna().unique().tolist())
-
-        if country_input:
-            region_options = sorted(country_to_regions[country_input])
-            region_input = st.selectbox("Region", region_options)
-        else:
-            region_input = st.selectbox("Region", df["RegionName"].dropna().unique().tolist())
+        region_input = st.selectbox("Region", df["RegionName"].dropna().unique().tolist())
 
     col3, col4 = st.columns(2)
     with col3:
