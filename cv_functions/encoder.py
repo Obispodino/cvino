@@ -2,14 +2,17 @@ import pandas as pd
 import numpy as np
 import pickle
 import os
+import sys
+
+# Add project root to Python path to ensure all modules can be found
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, OrdinalEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
-from transformers.top_k_encoder import TopNGrapeOneHotEncoder
-from transformers.body_ordinal_encoder import BodyOrdinalEncoder
-from transformers.acid_ordinal_encoder import AcidOrdinalEncoder
-from transformers.ratings_stat import RatingsStatsAggregator
+# Using absolute imports with the project root directory
+from cv_functions.custom_encoders import TopNGrapeOneHotEncoder, BodyOrdinalEncoder, AcidOrdinalEncoder, RatingsStatsAggregator
 import ipdb
 
 
