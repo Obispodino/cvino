@@ -1,0 +1,21 @@
+# Ignore unnecessary folders
+__pycache__/
+raw_data/
+models/
+notebooks/
+streamlit/
+venv/
+.git/
+.dockerignore
+Dockerfile
+*.ipynb
+*.csv
+*.xlsx
+*.zip
+*.pkl
+
+# Except the ones we need:
+!models/trained_model.pkl
+!models/preprocessor.pkl
+!raw_data/wine_metadata.csv
+!raw_data/geocoding_cache.pkl
