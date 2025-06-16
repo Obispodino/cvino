@@ -16,6 +16,7 @@ from transformers.ratings_agg import Rates_aggregator
 LOCAL_DATA_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino", "raw_data")
 clean_wine_path = os.path.join(LOCAL_DATA_PATH, "clean_wine_knn.csv") # search for file for knn if existed
 LOCAL_MODEL_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino","models")
+os.makedirs(LOCAL_MODEL_PATH, exist_ok=True) # This will create the directory if it doesn't exist
 preprocessor_path = os.path.join(LOCAL_MODEL_PATH, "preprocessor.pkl")
 Pipeline_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino", "models")
 
