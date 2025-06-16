@@ -5,18 +5,24 @@ from cv_functions.geocode_regions import retrieve_coordinate
 import ipdb
 import os
 import numpy as np
+import ast
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+
+LOCAL_DATA_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino","models")
+pickle_file = os.path.join(LOCAL_DATA_PATH, "trained_model.pkl")
+
 def get_wine_recommendations_by_characteristics(df,
     wine_type='Red',                   # Wine type (Red, White, Rosé, Sparkling, Dessert, Dessert/Port etc.)
-    grape_varieties='Malbec',          # Grape varieties (single string or list)
+    grape_varieties=None,          # Grape varieties (single string or list)
     body='Full-bodied',              #['Very light-bodied', 'Light-bodied', 'Medium-bodied', 'Full-bodied', 'Very full-bodied']
     abv=12.0,                          # Alcohol by volume percentage, min 0, max 50
     acidity=None,                      # Optional - Acidity (Low, Medium, High)
-    country="Argentina",                      # Optional - Country of origin
+    country=None,                      # Optional - Country of origin
     region_name=None,
-    n_recommendations=5             # Number of recommendations to return
+    n_recommendations=5, # Number of recommendations to return
+    load_model_file=pickle_file
 ):
 
 
@@ -29,19 +35,17 @@ def get_wine_recommendations_by_characteristics(df,
             latitude_in = latitude
             longitude_in = longitude
 
-
-
     # create a DataFrame
     X_pred = pd.DataFrame(dict(
-    Type =wine_type,
-    ABV=abv,
-    Body=body,
-    Acidity=acidity,
-    Country=country,
-    RegionName=region_name,
-    latitude = latitude_in,
-    longitude = longitude_in,
-    Grapes_list = grape_varieties,
+    Type = [wine_type],
+    ABV=[abv],
+    Body=[body],
+    Acidity=[acidity],
+    Country=[country],
+    RegionName=[region_name],
+    latitude = [latitude_in],
+    longitude = [longitude_in],
+    Grapes_list = [grape_varieties],
     avg_rating = [3.79],
     rating_count = [0],
     rating_std = [0]
@@ -53,7 +57,7 @@ def get_wine_recommendations_by_characteristics(df,
     # transfor an dencode the incoming data
     wine_proccessed = Encoder_features_transform(X_pred_cleaned)
     # load knn model
-    knn_model = load_model()
+    knn_model = load_model(load_model_file)
 
     # Get extra recommendations to account for filtering
     n_neighbors = max(n_recommendations * 3, 20) if country else n_recommendations
@@ -92,25 +96,28 @@ def get_wine_recommendations_by_characteristics(df,
 
     return result
 
+
+## this is the main function to run the script and test the recommendation funciton
 if __name__ == "__main__":
     LOCAL_DATA_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino", "raw_data")
     wine_scaled_df = pd.read_csv(os.path.join(LOCAL_DATA_PATH, 'wine_lookup.csv'))
 
     recommended_wines = get_wine_recommendations_by_characteristics(wine_scaled_df,
     wine_type='Red',                # Wine type (Red, White, Rosé, Sparkling, etc.)
-    grape_varieties='Syrah/Shiraz',       # Grape varieties (single string or list)
+    grape_varieties=['Cabernet Sauvignon'],       # Grape varieties (single string or list)
     body='Full-bodied',           # Body ['Very light-bodied', 'Light-bodied', 'Medium-bodied', 'Full-bodied', 'Very full-bodied']
-    acidity='Medium',               # Acidity (Low, Medium, High)
-    abv=14.0,                       # Alcohol by volume percentage
-    country=None,               # Country of origin
-    region_name=None,  # Region name
-    n_recommendations=5  )
-
+    acidity='Low',               # Acidity (Low, Medium, High)
+    abv=13.5,                       # Alcohol by volume percentage
+    country='Chile',               # Country of origin
+    region_name='Maule Valley',  # Region name
+    n_recommendations=5)
     #ipdb.set_trace()
+
     if not recommended_wines.empty:
         print("Recommended wines based on your preferences:")
         for i, (_, wine) in enumerate(recommended_wines.iterrows(), 1):
-            grapes_str = ', '.join(wine['Grapes_list']) if isinstance(wine['Grapes_list'], list) else 'Unknown'
+            grapes_list = ast.literal_eval(wine['Grapes_list'])
+            grapes_str = ', '.join(grapes_list) if isinstance(grapes_list, list) else 'Unknown'
             print(f"{i}. {wine['WineName']} ({wine['Country']}, {wine['Type']})")
             print(f"   Region: {wine['RegionName'] or 'Unknown'}")
             print(f"   Grapes: {grapes_str}")

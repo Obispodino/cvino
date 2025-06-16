@@ -14,12 +14,7 @@ class TopNGrapeOneHotEncoder(BaseEstimator, TransformerMixin):
         if isinstance(X, pd.DataFrame):
             X = X.iloc[:, 0]
 
-        all_grapes = [
-            grape
-            for sublist in X
-            if isinstance(sublist, list)
-            for grape in sublist
-        ]
+        all_grapes = [grape for sublist in X if isinstance(sublist, list) for grape in sublist]
 
         self.top_grapes = pd.Series(all_grapes).value_counts().head(self.top_n).index.tolist()
         self.output_columns = [f'{self.output_prefix}_{grape}' for grape in self.top_grapes]
