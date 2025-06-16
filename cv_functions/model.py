@@ -19,7 +19,7 @@ def train_model(X_scaled_df, n_neighbors = 6):
     return knn_model
 
 
-def load_model():
+def load_model(filepath=pickle_file):
     with open(pickle_file, 'rb') as f:
         model = pickle.load(f)
     return model

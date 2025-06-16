@@ -27,11 +27,6 @@ else:
     # load the cleaned data (clean data and save csv if not exist)
     wines_clean_df, ratings_clean_df = get_data_with_cache(LOCAL_DATA_PATH)
 
-    # fit_transform rating data
-    # ratings_agg = RatingsStatsAggregator(ratings_clean_df)
-    # ratings_agg.fit()
-    # ratings_stats = ratings_agg.transform(ratings_clean_df)
-
     ratings_stats = Rates_aggregator(ratings_clean_df)
 
     # merge DataFrames
@@ -52,14 +47,6 @@ else:
     else:
         wine_scaled_df = Encoder_features_fit_transform(wine_scaled_df_knn)
 
-
-
-    # # keep columns for KNN models
-    # drop_columns = ['WineID', 'WineName','Elaborate','Grapes', 'Harmonize', 'Code', 'Country','RegionID', 'RegionName',
-    #                 'WineryID','WineryName','Website','Vintages']
-    # wine_scaled_df_knn = wine_scaled_df.drop(columns=drop_columns, axis=1)
-
-
     print('save cleaned merged file for knn to .csv ....')
     save_path =  os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino", "raw_data")
     wine_scaled_df.to_csv(os.path.join(save_path, 'clean_wine_knn.csv'), index=False)
@@ -69,9 +56,6 @@ else:
 LOCAL_MODEL_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino","models")
 pickle_file_path = os.path.join(LOCAL_MODEL_PATH, "trained_model.pkl")
 
-if Path(pickle_file_path).is_file():
-    print("Model file exists.")
-    model = load_model()
-else:
+if not Path(pickle_file_path).is_file():
     print("Model file not found.")
     model = train_model(wine_scaled_df)
