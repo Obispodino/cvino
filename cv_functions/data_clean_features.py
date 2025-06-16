@@ -31,7 +31,7 @@ def wine_clean_features(wd: pd.DataFrame) -> pd.DataFrame:
     wines_clean['Country'] = wines_clean['Country'].str.strip()
     wines_clean['Type'] = wines_clean['Type'].str.strip()
     wines_clean['WineName'] = wines_clean['WineName'].str.strip()
-    wines_clean['Grapes_list'] = wines_clean['Grapes'].apply(lambda x: eval(x) if isinstance(x, str) else x)
+
     print("Wine dataset cleaning completed!")
 
     return wines_clean
