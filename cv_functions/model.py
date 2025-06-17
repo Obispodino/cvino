@@ -2,7 +2,7 @@ from sklearn.neighbors import NearestNeighbors
 import pickle
 import os
 
-LOCAL_DATA_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino","models")
+LOCAL_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
 pickle_file = os.path.join(LOCAL_DATA_PATH, "trained_model.pkl")
 
 def train_model(X_scaled_df, n_neighbors = 6):
@@ -20,6 +20,6 @@ def train_model(X_scaled_df, n_neighbors = 6):
 
 
 def load_model(filepath=pickle_file):
-    with open(pickle_file, 'rb') as f:
+    with open(filepath, 'rb') as f:
         model = pickle.load(f)
     return model

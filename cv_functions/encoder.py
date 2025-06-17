@@ -16,8 +16,8 @@ from cv_functions.custom_encoders import TopNGrapeOneHotEncoder, BodyOrdinalEnco
 import ipdb
 
 
-LOCAL_DATA_PATH = os.path.join(os.path.expanduser('~'), "code", "Obispodino", "cvino","models")
-preprocessor_file = os.path.join(LOCAL_DATA_PATH, "preprocessor.pkl")
+LOCAL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
+preprocessor_file = os.path.join(LOCAL_PATH, "preprocessor.pkl")
 
 
 # Function to get column names
