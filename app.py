@@ -186,7 +186,14 @@ if st.session_state.food_page:
         'Vegetarian': '🥦',
         'Yakissoba': '🍜'
     }
-    food_input = st.selectbox("Choose a food:", unique_foods, key="food_input")
+    # Show food options with emoji in dropdown
+    food_options_with_emoji = [
+        f"{food_emoji_dict.get(food, '')} {food}" for food in unique_foods
+    ]
+    # Map back from dropdown selection to food name
+    selected = st.selectbox("Choose a food:", food_options_with_emoji, key="food_input")
+    # Extract food name (remove emoji and space)
+    food_input = selected.split(' ', 1)[1] if ' ' in selected else selected
 
     if st.button("🔎 Recommend Wines"):
         if food_input.strip():
