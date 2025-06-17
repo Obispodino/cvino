@@ -55,7 +55,7 @@ st.markdown("""
 @st.cache_data
 def load_data():
     try:
-        return pd.read_csv("raw_data/wine_metadata2.csv")
+        return pd.read_csv("raw_data/wine_metadata.csv")
     except FileNotFoundError:
         return pd.DataFrame()
 
@@ -227,7 +227,7 @@ if st.session_state.wine_page:
 
     # === Image Upload Box ===
     st.markdown(
-        "<h3 style='font-size:1.7rem;'>📸 Upload a Wine Picture</h3>",
+        "<h3 style='font-size:1.3rem;'>📸 Upload a Wine Picture</h3>",
         unsafe_allow_html=True
     )
     uploaded_image = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"])
