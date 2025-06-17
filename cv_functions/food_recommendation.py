@@ -72,7 +72,12 @@ def get_wine_recommendations_by_food(
                 return False
             return any(grape in wine_grapes for grape in target_grapes)
 
-        food_matched_wines['Grapes_list'] = food_matched_wines['Grapes_list'].apply(safe_eval_list)
+        if 'Grapes_list' in food_matched_wines.columns:
+            food_matched_wines['Grapes_list'] = food_matched_wines['Grapes_list'].apply(safe_eval_list)
+        else:
+            print("⚠️ Column 'Grapes_list' not found in the dataset.")
+            return pd.DataFrame()  # or optionally return food_matched_wines without grape filtering
+
         food_matched_wines = food_matched_wines[
             food_matched_wines['Grapes_list'].apply(lambda x: has_any_grape(x, grape_list))]
 

@@ -7,7 +7,7 @@ import os
 import joblib
 
 
-from cv_functions.recommendation import get_wine_recommendations_by_characteristics
+from cv_functions.recommendation import get_wine_recommendations_by_characteristics, get_wine_recommendations_by_food
 
 app = FastAPI()
 
@@ -39,6 +39,20 @@ class WineRequest(BaseModel):
     region_name: Optional[str] = None
     n_recommendations: int = 5
 
+
+class FoodWineRequest(BaseModel):
+    food_pairing: str
+    wine_type: Optional[str] = None
+    grape_varieties: Optional[List[str]] = None
+    body: Optional[str] = None
+    abv: Optional[float] = None
+    acidity: Optional[str] = None
+    country: Optional[str] = None
+    region_name: Optional[str] = None
+    n_recommendations: int = 5
+    exact_match_only: bool = False
+
+
 @app.get("/")
 def root():
     return {"message": "Wine Recommender API is running."}
@@ -66,3 +80,29 @@ def recommend_wines(request: WineRequest):
         return {"wines": result_df.to_dict(orient="records")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
+
+@app.post("/recommend-by-food")
+def recommend_by_food(request: FoodWineRequest):
+    if wine_metadata_df is None:
+        raise HTTPException(status_code=500, detail="Metadata not loaded")
+
+    try:
+        result_df = get_wine_recommendations_by_food(
+            features_df=wine_metadata_df,
+            food_pairing=request.food_pairing,
+            wine_type=request.wine_type,
+            grape_varieties=request.grape_varieties,
+            body=request.body,
+            abv=request.abv,
+            acidity=request.acidity,
+            country=request.country,
+            region_name=request.region_name,
+            n_recommendations=request.n_recommendations,
+            exact_match_only=request.exact_match_only
+        )
+        if result_df.empty:
+            return {"message": f"No wines found for food '{request.food_pairing}'.", "wines": []}
+
+        return {"wines": result_df.to_dict(orient="records")}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Food recommendation failed: {e}")
