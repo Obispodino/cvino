@@ -190,43 +190,17 @@ if st.session_state.food_page:
     food_options_with_emoji = [
         f"{food_emoji_dict.get(food, '')} {food}" for food in unique_foods
     ]
-    selected_foods = st.multiselect(
-        "Food (start typing for suggestions)",
-        options=food_options_with_emoji,
-        help="Start typing to select one or more foods from our database."
-    )
-
-    wine_types = df["Type"].dropna().unique().tolist()
-    wine_type_selected = st.selectbox("🍷 Prefer a wine type?", wine_types)
-
-
-
-
-    # Extract food names (remove emoji and space)
-    food_inputs = [s.split(' ', 1)[1] if ' ' in s else s for s in selected_foods]
-    # For compatibility with the rest of the code, join as comma-separated string
-    food_input = ", ".join(food_inputs)
-
+    # Map back from dropdown selection to food name
+    selected = st.selectbox("Choose a food:", food_options_with_emoji, key="food_input")
+    # Extract food name (remove emoji and space)
+    food_input = selected.split(' ', 1)[1] if ' ' in selected else selected
 
     if st.button("🔎 Recommend Wines"):
-        if selected_foods:
-            selected_food_names = [food.split(' ', 1)[1] if ' ' in food else food for food in selected_foods]
-
-            def matches_any_food(harmonize_str):
-                if isinstance(harmonize_str, str) and harmonize_str.startswith("["):
-                    try:
-                        harmonized_foods = [item.lower() for item in ast.literal_eval(harmonize_str)]
-                        return any(food.lower() in harmonized_foods for food in selected_food_names)
-                    except:
-                        return False
-                return False
-
-            food_wines = df[df["Harmonize"].apply(matches_any_food)]
-
-            if wine_type_selected != "All":
-                food_wines = food_wines[food_wines["Type"] == wine_type_selected]
-
-
+        if food_input.strip():
+            food_wines = df[df["Harmonize"].apply(
+                lambda x: food_input.lower() in [item.lower() for item in ast.literal_eval(x)]
+                if isinstance(x, str) and x.startswith("[") else False
+            )]
             if not food_wines.empty:
                 st.success(f"Found {len(food_wines)} wines for '{food_input}' 🍇")
                 top_food_wines = food_wines.head(10)
