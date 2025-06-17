@@ -117,6 +117,75 @@ with col2:
 # === Food-Based Wine Recommendation Page ===
 if st.session_state.food_page:
     st.header("🍽️ Food-Based Wine Recommendation")
+
+    food_emoji_dict = {
+        'Aperitif': '🥂',
+        'Appetizer': '🥟',
+        'Asian Food': '🍜',
+        'Baked Potato': '🥔',
+        'Barbecue': '🍖',
+        'Beans': '🫘',
+        'Beef': '🥩',
+        'Blue Cheese': '🧀',
+        'Cake': '🍰',
+        'Cheese': '🧀',
+        'Chestnut': '🌰',
+        'Chicken': '🍗',
+        'Chocolate': '🍫',
+        'Citric Dessert': '🍋',
+        'Codfish': '🐟',
+        'Cold Cuts': '🥓',
+        'Cookies': '🍪',
+        'Cream': '🥛',
+        'Cured Meat': '🥩',
+        'Curry Chicken': '🍛',
+        'Dessert': '🍮',
+        'Dried Fruits': '🍇',
+        'Duck': '🦆',
+        'Eggplant Parmigiana': '🍆',
+        'Fish': '🐟',
+        'French Fries': '🍟',
+        'Fruit': '🍓',
+        'Fruit Dessert': '🥧',
+        'Game Meat': '🦌',
+        'Goat Cheese': '🧀',
+        'Grilled': '🔥',
+        'Ham': '🍖',
+        'Hard Cheese': '🧀',
+        'Lamb': '🍖',
+        'Lasagna': '🍝',
+        'Lean Fish': '🐟',
+        'Light Stews': '🥘',
+        'Maturated Cheese': '🧀',
+        'Meat': '🥩',
+        'Medium-cured Cheese': '🧀',
+        'Mild Cheese': '🧀',
+        'Mushrooms': '🍄',
+        'Paella': '🥘',
+        'Pasta': '🍝',
+        'Pizza': '🍕',
+        'Pork': '🥓',
+        'Poultry': '🍗',
+        'Rich Fish': '🐟',
+        'Risotto': '🍚',
+        'Roast': '🍖',
+        'Salad': '🥗',
+        'Sashimi': '🍣',
+        'Seafood': '🦐',
+        'Shellfish': '🦀',
+        'Snack': '🥨',
+        'Soft Cheese': '🧀',
+        'Soufflé': '🥧',
+        'Spiced Fruit Cake': '🍰',
+        'Spicy Food': '🌶️',
+        'Sushi': '🍣',
+        'Sweet Dessert': '🍮',
+        'Tagliatelle': '🍝',
+        'Tomato Dishes': '🍅',
+        'Veal': '🥩',
+        'Vegetarian': '🥦',
+        'Yakissoba': '🍜'
+    }
     food_input = st.selectbox("Choose a food:", unique_foods, key="food_input")
 
     if st.button("🔎 Recommend Wines"):
@@ -149,57 +218,23 @@ if st.session_state.food_page:
             else:
                 st.warning(f"No wine recommendations found for '{food_input}'.")
 
-    # if st.button("🔙 Back to Main Page"):
-    #     st.session_state.food_page = False
-    #     st.rerun()
-
-
-    # # Original layout: dropdown and button in sequence
-    # food_input = st.selectbox(
-    #     "Choose a food to get wine recommendations:",
-    #     unique_foods,
-    #     key="food_input"
-    # )
-
-    # # Original working button
-    # if st.button("🔎 Recommend Wines"):
-    #     if food_input.strip():
-    #         food_wines = df[df["Harmonize"].apply(
-    #             lambda x: food_input.lower() in [item.lower() for item in ast.literal_eval(x)] if isinstance(x, str) and x.startswith("[") else False
-    #         )]
-
-    #         if not food_wines.empty:
-    #             st.success(f"Found {len(food_wines)} wines for '{food_input}' 🍇")
-    #             top_food_wines = food_wines[["WineName", "Grapes", "Body", "ABV", "RegionName", "Country", "Harmonize"]].head(10)
-
-    #             for _, row in top_food_wines.iterrows():
-    #                 with st.container():
-    #                     cols = st.columns([1, 4])
-    #                     with cols[0]:
-    #                         st.image("https://purepng.com/public/uploads/large/purepng.com-wine-bottlefood-winebottlealcoholbeverageliquor-2515194557124w46mz.png", width=80)
-    #                     with cols[1]:
-    #                         st.markdown(f"""
-    #                             ### {row['WineName']}
-    #                             - **Grapes**: {", ".join(ast.literal_eval(row['Grapes'])) if isinstance(row['Grapes'], str) and row['Grapes'].startswith("[") else row['Grapes']}
-    #                             - **Body**: {row['Body']}
-    #                             - **ABV**: {row['ABV']}%
-    #                             - **Region**: {row['RegionName']}
-    #                             - **Country**: {row['Country']}
-    #                             - **Food Recommendation**: {", ".join(ast.literal_eval(row['Harmonize']))}
-    #                         """)
-    #                         st.markdown("---")
-    #         else:
-    #             st.warning(f"No wine recommendations found for '{food_input}'.")
-    #     else:
-    #         st.warning("Please enter a food.")
-
-
 
 # === Main Wine Filters Page ===
 if st.session_state.wine_page:
-# === API-Driven Recommendation ===
+    # === API-Driven Recommendation ===
 
     st.subheader("🔎 Enter your wine preferences")
+
+    # === Image Upload Box ===
+    st.markdown(
+        "<h3 style='font-size:1.7rem;'>📸 Upload a Wine Picture</h3>",
+        unsafe_allow_html=True
+    )
+    uploaded_image = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"])
+
+    if uploaded_image is not None:
+        st.image(uploaded_image, caption="Your uploaded image", use_column_width=True)
+
 
     col1, col2 = st.columns(2)
     with col1:
