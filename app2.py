@@ -74,18 +74,6 @@ region_to_country = {
     for country, regions in country_to_regions.items()
     for region in regions}
 
-# create grape varieties list
-all_grapes = []
-for grapes in df["Grapes_list"]:
-    # Convert string representation of list to actual list if needed
-    if isinstance(grapes, str):
-        grapes_list = ast.literal_eval(grapes)
-    else:
-        grapes_list = grapes
-    all_grapes.extend([g.strip() for g in grapes_list])
-
-unique_grapes = sorted(set(all_grapes))
-
 
 # === Session state for page navigation ===
 if "food_page" not in st.session_state:
@@ -202,100 +190,55 @@ if st.session_state.food_page:
     food_options_with_emoji = [
         f"{food_emoji_dict.get(food, '')} {food}" for food in unique_foods
     ]
-    selected_foods = st.multiselect(
-        "Food (start typing for suggestions)",
-        options=food_options_with_emoji,
-        help="Start typing to select one or more foods from our database."
-    )
-
-
-    wine_types = df["Type"].dropna().unique().tolist()
-    wine_type_selected = st.selectbox("🍷 Prefer a wine type?", wine_types)
-
-
-    # Extract food names (remove emoji and space)
-    food_inputs = [s.split(' ', 1)[1] if ' ' in s else s for s in selected_foods]
-    # For compatibility with the rest of the code, join as comma-separated string
-    food_input = ", ".join(food_inputs)
+    # Map back from dropdown selection to food name
+    selected = st.selectbox("Choose a food:", food_options_with_emoji, key="food_input")
+    # Extract food name (remove emoji and space)
+    food_input = selected.split(' ', 1)[1] if ' ' in selected else selected
 
     if st.button("🔎 Recommend Wines"):
-        if selected_foods:
-            selected_food_names = [food.split(' ', 1)[1] if ' ' in food else food for food in selected_foods]
+        if food_input.strip():
+            food_wines = df[df["Harmonize"].apply(
+                lambda x: food_input.lower() in [item.lower() for item in ast.literal_eval(x)]
+                if isinstance(x, str) and x.startswith("[") else False
+            )]
+            if not food_wines.empty:
+                st.success(f"Found {len(food_wines)} wines for '{food_input}' 🍇")
+                top_food_wines = food_wines.head(10)
 
-            def matches_any_food(harmonize_str):
-                if isinstance(harmonize_str, str) and harmonize_str.startswith("["):
-                    try:
-                        harmonized_foods = [item.lower() for item in ast.literal_eval(harmonize_str)]
-                        return any(food.lower() in harmonized_foods for food in selected_food_names)
-                    except:
-                        return False
-                return False
+                for _, row in top_food_wines.iterrows():
+                    with st.container():
+                        cols = st.columns([1, 4])
+                    with cols[0]:
+                        st.image("https://purepng.com/public/uploads/large/purepng.com-wine-bottlefood-winebottlealcoholbeverageliquor-2515194557124w46mz.png", width=80)
+                    with cols[1]:
+                        # Handle grapes
+                        grapes = row.get('Grapes') or row.get('Grapes_list', [])
+                        if isinstance(grapes, str):
+                            try:
+                                grapes = ast.literal_eval(grapes)
+                            except:
+                                grapes = [grapes]
+                        grapes_display = ", ".join(grapes) if isinstance(grapes, list) else str(grapes)
 
-            food_wines = df[df["Harmonize"].apply(matches_any_food)]
+                        # Handle harmonize
+                        harmonize = row.get("Harmonize", [])
+                        if isinstance(harmonize, str):
+                            try:
+                                harmonize = ast.literal_eval(harmonize)
+                            except:
+                                pass
+                        harmonize_display = ", ".join(harmonize) if isinstance(harmonize, list) else str(harmonize)
 
-            if wine_type_selected != "All":
-                food_wines = food_wines[food_wines["Type"] == wine_type_selected]
-
-                if not food_wines.empty:
-                    st.success(f"Found {len(food_wines)} wines for '{food_input}' 🍇")
-
-                    top_food_wines = food_wines.head(10)
-
-                    for _, row in top_food_wines.iterrows():
-                        with st.container():
-                            cols = st.columns([1, 4])
-
-                            with cols[0]:
-                                st.markdown("<div style='height:40px;'></div>", unsafe_allow_html=True)
-                                # Show wine type image
-                                if row['Type'] == "Red":
-                                    image_path = "images/red_wine.png"
-                                elif row['Type'] == "White":
-                                    image_path = "images/white_wine.png"
-                                elif row['Type'] == "Rosé":
-                                    image_path = "images/rose_wine.png"
-                                elif row['Type'] == "Sparkling":
-                                    image_path = "images/sparkling_wine.png"
-                                elif row['Type'] == "Dessert":
-                                    image_path = "images/dessert.png"
-                                elif row['Type'] == "Dessert/Port":
-                                    image_path = "images/port.png"
-                                else:
-                                    image_path = "https://purepng.com/public/uploads/large/purepng.com-wine-bottlefood-winebottlealcoholbeverageliquor-2515194557124w46mz.png"
-                                st.image(image_path, width=250)
-
-                            with cols[1]:
-                                # Handle grapes
-                                grapes = row.get('Grapes') or row.get('Grapes_list', [])
-                                if isinstance(grapes, str):
-                                    try:
-                                        grapes = ast.literal_eval(grapes)
-                                    except:
-                                        grapes = [grapes]
-                                grapes_display = ", ".join(grapes) if isinstance(grapes, list) else str(grapes)
-
-                                # Handle harmonize
-                                harmonize = row.get("Harmonize", [])
-                                if isinstance(harmonize, str):
-                                    try:
-                                        harmonize = ast.literal_eval(harmonize)
-                                    except:
-                                        pass
-                                harmonize_display = ", ".join(harmonize) if isinstance(harmonize, list) else str(harmonize)
-
-                                st.markdown(f"""
-                                    ### {row['WineName']}
-                                    - **Type**: {row['Type']}
-                                    - **Grapes**: {grapes_display}
-                                    - **Body**: {row['Body']}
-                                    - **ABV**: {row['ABV']}%
-                                    - **Region**: {row['RegionName']}
-                                    - **Country**: {row['Country']}
-                                    - **Food Pairing**: {harmonize_display}
-                                """)
-                                st.markdown("---")
-                else:
-                    st.warning(f"No wine recommendations found for '{food_input}'.")
+                        st.markdown(f"""
+                            ### {row['WineName']}
+                            - **Grapes**: {grapes_display}
+                            - **Body**: {row['Body']}
+                            - **ABV**: {row['ABV']}%
+                            - **Region**: {row['RegionName']}
+                            - **Country**: {row['Country']}
+                            - **Food Pairing**: {harmonize_display}
+                        """)
+                        st.markdown("---")
 
             else:
                 st.warning(f"No wine recommendations found for '{food_input}'.")
@@ -320,26 +263,24 @@ if st.session_state.wine_page:
 
     col1, col2 = st.columns(2)
     with col1:
-        # Autocomplete grape input using unique_grapes
-        grape_input = st.multiselect(
-            "Grape (start typing for suggestions)",
-            options=unique_grapes,
-            help="Start typing to select one or more grape varieties from our database."
-        )
-        # Convert multiselect list to comma-separated string (like text_input)
-        if grape_input:
-            grape_input = ", ".join(grape_input)
-        else:
-            grape_input = ""
-
+        grape_input = st.text_input("Grape", placeholder="e.g., Merlot, Cabernet Sauvignon")
 
         wine_name_input = None
+        if grape_input:
+            filtered_wines = df[df["Grapes"].str.contains(grape_input.strip(), case=False, na=False)]
+            wine_name_options = filtered_wines["WineName"].dropna().unique().tolist()
+
+            if wine_name_options:
+                wine_name_input = st.selectbox("Wine Name (filtered by grape)", wine_name_options)
+            else:
+                st.warning("No wines found for that grape.")
+
 
         country_options = sorted(df["Country"].dropna().unique().tolist())
         country_input = st.selectbox("Country", country_options)
     with col2:
 
-        wine_type_input = st.selectbox("Type", df["Type"].dropna().unique().tolist(), index=1)
+        wine_type_input = st.selectbox("Type", df["Type"].dropna().unique().tolist())
 
         if country_input:
             region_options = sorted(country_to_regions[country_input])
@@ -347,14 +288,15 @@ if st.session_state.wine_page:
         else:
             region_input = st.selectbox("Region", df["RegionName"].dropna().unique().tolist())
 
+    #     country_input = st.selectbox("Country", df["Country"].dropna().unique() if "Country" in df.columns else [])
+    # with col2:
+    #     wine_type_input = st.selectbox("Type", df["Type"].dropna().unique() if "Type" in df.columns else [])
+    #     region_input = st.selectbox("Region", df["RegionName"].dropna().unique() if "RegionName" in df.columns else [])
+
 
     col3, col4 = st.columns(2)
     with col3:
-        body_input = st.selectbox(
-            "Body",
-            ["Very light-bodied", "Light-bodied", "Medium-bodied", "Full-bodied", "Very full-bodied"],
-            index=2  # 0-based index, so 2 is "Medium-bodied"
-        )
+        body_input = st.selectbox("Body", ["Very light-bodied", "Light-bodied", "Medium-bodied", "Full-bodied", "Very full-bodied"])
     with col4:
         abv_input = st.slider("ABV (%)", 5.0, 20.0, 13.5, step=0.1)
 
@@ -389,27 +331,11 @@ if st.session_state.wine_page:
                             with st.container():
                                 cols = st.columns([1, 4])
                                 with cols[0]:
-                                    # Add vertical space above the image to lower its position
-                                    st.markdown("<div style='height:40px;'></div>", unsafe_allow_html=True)
-                                    if wine['Type'] == "Red":
-                                        image_path = "images/red_wine.png"
-                                    elif wine['Type'] == "White":
-                                        image_path = "images/white_wine.png"
-                                    elif wine['Type'] == "Rosé":
-                                        image_path = "images/rose_wine.png"
-                                    elif wine['Type'] == "Sparkling":
-                                        image_path = "images/sparkling_wine.png"
-                                    elif wine['Type'] == "Dessert":
-                                        image_path = "images/dessert.png"
-                                    elif wine['Type'] == "Dessert/Port":
-                                        image_path = "images/port.png"
-                                    st.image(image_path, width=250)
-
+                                    st.image("https://purepng.com/public/uploads/large/purepng.com-wine-bottlefood-winebottlealcoholbeverageliquor-2515194557124w46mz.png", width=80)
                                 with cols[1]:
                                     st.markdown(f"""
                                         ### {wine['WineName']}
-                                        - **Type**: {wine['Type']}
-                                        - **Grapes**: {", ".join(ast.literal_eval(wine['Grapes_list'])) if isinstance(wine['Grapes_list'], str) else wine['Grapes_list']}
+                                        - **Grapes**: {", ".join(eval(wine['Grapes_list']))}
                                         - **Body**: {wine['Body']}
                                         - **ABV**: {wine['ABV']}%
                                         - **Region**: {wine['RegionName']}
