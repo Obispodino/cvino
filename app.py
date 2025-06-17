@@ -119,7 +119,7 @@ if st.session_state.food_page:
     st.header("🍽️ Food-Based Wine Recommendation")
 
     food_emoji_dict = {
-        'Aperitif': '🥂',
+        'Aperitif': '🍹',
         'Appetizer': '🥟',
         'Asian Food': '🍜',
         'Baked Potato': '🥔',
@@ -137,12 +137,12 @@ if st.session_state.food_page:
         'Cold Cuts': '🥓',
         'Cookies': '🍪',
         'Cream': '🥛',
-        'Cured Meat': '🥩',
+        'Cured Meat': '🍖',
         'Curry Chicken': '🍛',
         'Dessert': '🍮',
         'Dried Fruits': '🍇',
         'Duck': '🦆',
-        'Eggplant Parmigiana': '🍆',
+        'Eggplant Parmigiana': '🧀',
         'Fish': '🐟',
         'French Fries': '🍟',
         'Fruit': '🍓',
@@ -172,7 +172,7 @@ if st.session_state.food_page:
         'Salad': '🥗',
         'Sashimi': '🍣',
         'Seafood': '🦐',
-        'Shellfish': '🦀',
+        'Shellfish': '🦪',
         'Snack': '🥨',
         'Soft Cheese': '🧀',
         'Soufflé': '🥧',
