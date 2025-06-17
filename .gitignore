@@ -41,6 +41,12 @@ models/
 *.pckl
 *.pkl
 
+# sound files
+*.wav
+*.mp3
+
+
+
 # Credentials (or files with potentially credentials inside)
 .env
 .env.yaml
