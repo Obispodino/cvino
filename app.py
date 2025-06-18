@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import ast
 import requests
+from cv_functions.wine_label_ai2 import extract_wine_info_from_image
+import ipdb
+import tempfile
 
 # === Set up page ===
 st.set_page_config(page_title="🍇 CvalVino", layout="wide")
@@ -213,10 +216,8 @@ if st.session_state.food_page:
         help="Start typing to select one or more foods from our database."
     )
 
-
     wine_types = df["Type"].dropna().unique().tolist()
     wine_type_selected = st.selectbox("🍷 Prefer a wine type?", wine_types)
-
 
     # Extract food names (remove emoji and space)
     food_inputs = [s.split(' ', 1)[1] if ' ' in s else s for s in selected_foods]
@@ -265,8 +266,7 @@ if st.session_state.food_page:
                                     image_path = "images/dessert.png"
                                 elif row['Type'] == "Dessert/Port":
                                     image_path = "images/port.png"
-                                else:
-                                    image_path = "https://purepng.com/public/uploads/large/purepng.com-wine-bottlefood-winebottlealcoholbeverageliquor-2515194557124w46mz.png"
+
                                 st.image(image_path, width=250)
 
                             with cols[1]:
@@ -312,15 +312,45 @@ if st.session_state.wine_page:
 
     st.subheader("🔎 Enter your wine preferences")
 
-    # === Image Upload Box ===
+    # === Acidity Default ===
+    acidity_input = "Medium"
+
+    # === Image Upload Box with Side-by-Side Layout ===
     st.markdown(
         "<h3 style='font-size:1.3rem;'>📸 Upload a Wine Picture</h3>",
         unsafe_allow_html=True
     )
-    uploaded_image = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"])
+    upload_col, img_col = st.columns([1, 2])
+    with upload_col:
+        uploaded_image = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
+    with img_col:
+        if uploaded_image is not None:
+            st.image(uploaded_image, caption="Your uploaded image", width=150)
 
-    if uploaded_image is not None:
-        st.image(uploaded_image, caption="Your uploaded image", use_column_width=True)
+    # Always show the button if an image is uploaded
+    send_to_api_clicked = st.button("Send to API", disabled=(uploaded_image is None))
+
+    if send_to_api_clicked and uploaded_image is not None:
+        # Send image to FastAPI
+        files = {'img': (uploaded_image.name, uploaded_image, uploaded_image.type)}
+        response = requests.post("https://cvino-api-224355531443.europe-west1.run.app/read_image", files=files)
+        #response = requests.post("http://localhost:8502/", files=files)
+        if response.status_code == 200:
+            st.success("Image successfully uploaded and processed!")
+
+            wine_info = response.json()
+            wine_type_input = wine_info.get('wine_type')
+            grape_input = wine_info.get('grape_varieties')
+            body_input = wine_info.get('body')
+            acidity_input = wine_info.get('acidity')
+            country_input = wine_info.get('country')
+            region_input = wine_info.get('region')
+            abv_input = wine_info.get('ABV')
+
+            #st.markdown(win_info.get('message', 'Wine information extracted successfully!'), unsafe_allow_html=True)
+
+        else:
+            st.error(f"Failed to upload image: {response.json().get('message')}")
 
 
     col1, col2 = st.columns(2)
@@ -378,7 +408,7 @@ if st.session_state.wine_page:
                 "grape_varieties": [grape_input] if grape_input else [],
                 "body": body_input,
                 "abv": abv_input,
-                "acidity": "Low",
+                "acidity": acidity_input,
                 "country": country_input,
                 "region_name": region_input,
                 "n_recommendations": num_recommendations

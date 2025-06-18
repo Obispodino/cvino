@@ -5,14 +5,14 @@ import os
 from PIL import Image
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
-
+import io
 import ipdb
 
 
 # Load environment variables from .env file
 load_dotenv()
 
-def extract_wine_info_from_image(image_path: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+def extract_wine_info_from_image(image, api_key: Optional[str] = None) -> Dict[str, Any]:
     """
     Extract wine information from a wine label image using Anthropic's Claude API.
 
@@ -23,7 +23,7 @@ def extract_wine_info_from_image(image_path: str, api_key: Optional[str] = None)
     Returns:
         Dict containing extracted wine information
     """
-    #ipdb.set_trace()
+
     # Initialize Anthropic client
     if api_key is None:
         api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -34,14 +34,11 @@ def extract_wine_info_from_image(image_path: str, api_key: Optional[str] = None)
     client = anthropic.Anthropic(api_key=api_key)
 
     # Resize and prepare image
-    processed_image_path = resize_image_for_api(image_path)
+    processed_image = resize_image_for_api(image)
 
     # Convert image to base64
-    image_base64 = encode_image_to_base64(processed_image_path)
+    image_base64 = encode_image_to_base64(processed_image)
 
-    # Clean up temporary resized image if it was created
-    if processed_image_path != image_path:
-        os.remove(processed_image_path)
 
     # Create the prompt for wine information extraction
     system_prompt = """You are an expert wine sommelier and label reader. Your task is to carefully analyze wine label images and extract specific information.
@@ -133,7 +130,7 @@ Return the results in JSON format as specified."""
                 wine_info[field] = None
 
         # Add metadata
-        wine_info["image_path"] = image_path
+        #wine_info["image_path"] = image_path
         wine_info["extraction_successful"] = True
 
         return wine_info
@@ -148,12 +145,12 @@ Return the results in JSON format as specified."""
             "country": None,
             "region": None,
             "ABV": None,
-            "image_path": image_path,
+            #"image_path": image_path,
             "extraction_successful": False,
             "error": str(e)
         }
 
-def resize_image_for_api(image_path: str, max_size: int = 400) -> str:
+def resize_image_for_api(image_file, max_size: int = 400) -> str:
     """
     Resize image to maximum 400x400 pixels while maintaining aspect ratio.
 
@@ -165,40 +162,29 @@ def resize_image_for_api(image_path: str, max_size: int = 400) -> str:
         str: Path to the resized image (may be the same as input if no resize needed)
     """
     try:
-        # Open the image
-        with Image.open(image_path) as image:
-            # Check if resize is needed
-            if max(image.width, image.height) <= max_size:
-                return image_path  # No resize needed
+        image = image_file
+        #image = Image.open(image_file)
+        # Check if resize is needed
+        if max(image.width, image.height) <= max_size:
+            return image  # No resize needed
 
-            # Calculate new dimensions maintaining aspect ratio
-            if image.width > image.height:
-                new_width = max_size
-                new_height = int((max_size * image.height) / image.width)
-            else:
-                new_height = max_size
-                new_width = int((max_size * image.width) / image.height)
+        # Calculate new dimensions maintaining aspect ratio
+        if image.width > image.height:
+            new_width = max_size
+            new_height = int((max_size * image.height) / image.width)
+        else:
+            new_height = max_size
+            new_width = int((max_size * image.width) / image.height)
 
-            # Resize the image using high-quality resampling
-            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-
-            # Create output path
-            base_name = os.path.splitext(os.path.basename(image_path))[0]
-            output_path = f"/tmp/{base_name}_resized.jpg"
-
-            # Save resized image
-            if resized_image.mode != 'RGB':
-                resized_image = resized_image.convert('RGB')
-
-            resized_image.save(output_path, 'JPEG', quality=95)
-
-            return output_path
+        # Resize the image using high-quality resampling
+        resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        return resized_image
 
     except Exception as e:
         print(f"Error resizing image: {e}")
-        return image_path  # Return original path if resize fails
+        return Image.open(image_file)  # Return original image if resize fails
 
-def encode_image_to_base64(image_path: str) -> str:
+def encode_image_to_base64(image: Image.Image) -> str:
     """
     Convert image file to base64 string for API transmission.
 
@@ -208,8 +194,9 @@ def encode_image_to_base64(image_path: str) -> str:
     Returns:
         str: Base64 encoded image data
     """
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+    buffered = io.BytesIO()
+    image.save(buffered, format="JPEG")
+    return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
 # Example usage function
 def main():
