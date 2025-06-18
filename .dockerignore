@@ -1,9 +1,9 @@
-# Ignore everything first
+# Ignore everything by default
 **
 
-# Allow only these specific files/folders
-!app.py
+# Allow key files and folders for backend API
 !requirements.txt
-!raw_data/wine_metadata.csv
-!raw_data/geocoding_cache.pkl
-!raw_data/last/XWines_Full_100K_wines.csv
+!API/
+!cv_functions/
+!models/
+!raw_data/
