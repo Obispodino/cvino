@@ -5,6 +5,7 @@ from cv_functions.geocode_regions import retrieve_coordinate
 import numpy as np
 import os
 import ast
+from fastapi import HTTPException
 
 # # Load model path
 # LOCAL_MODEL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models", "trained_model.pkl"))
