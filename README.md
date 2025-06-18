@@ -160,6 +160,7 @@ The API will be accessible at [http://localhost:8501](http://localhost:8501)
   ]
 }
 ```
+http://localhost:8501/
 
 ## � Project Structure
 
