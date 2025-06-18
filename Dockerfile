@@ -1,19 +1,19 @@
-# Use a lightweight Python image
+# 1. ✅ Use a base image
 FROM python:3.11-slim
 
-# Set working directory
+# 2. ✅ Set working directory
 WORKDIR /app
 
-# Install dependencies
+# 3. ✅ Copy and install dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy Streamlit app and any required assets
-COPY app.py .
-COPY raw_data/ ./raw_data/
+# 4. ✅ Copy your actual code
+COPY cv_functions cv_functions
+COPY API API
+COPY raw_data raw_data
+COPY models models
 
-# Streamlit runs on port 8501
-EXPOSE 8501
-
-# Run the app
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# 5. ✅ Define the entrypoint to run the API
+CMD ["uvicorn", "API.fast:app", "--host", "0.0.0.0", "--port", "8080"]
