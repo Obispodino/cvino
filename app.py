@@ -7,6 +7,11 @@ import requests
 # === Set up page ===
 st.set_page_config(page_title="🍇 CvalVino", layout="wide")
 
+
+
+
+
+
 # === Styling ===
 st.markdown("""<style>
 html, body, [data-testid="stAppViewContainer"] { background-color: #722F37; color: #FFFFFF; }
@@ -361,6 +366,12 @@ if st.session_state.wine_page:
     num_recommendations = st.number_input("How many wine recommendations?", 1, 50, 5, step=1)
 
     if st.button("🔎 Get Recommendations"):
+        st.components.v1.html("""
+        <audio autoplay id="temp-audio">
+            <source src="https://raw.githubusercontent.com/Obispodino/cvino/master/interface/wine-music.mp3" type="audio/mp3">
+        </audio>
+        """, height=0)
+
         with st.spinner("Fetching from the CvalVino API..."):
             payload = {
                 "wine_type": wine_type_input,
@@ -384,39 +395,52 @@ if st.session_state.wine_page:
                     if not wines:
                         st.warning("No recommendations found.")
                     else:
-                        st.success(f"Here are your top {len(wines)} wine recommendations 🍷")
-                        for wine in wines:
-                            with st.container():
-                                cols = st.columns([1, 4])
-                                with cols[0]:
-                                    # Add vertical space above the image to lower its position
-                                    st.markdown("<div style='height:40px;'></div>", unsafe_allow_html=True)
-                                    if wine['Type'] == "Red":
-                                        image_path = "images/red_wine.png"
-                                    elif wine['Type'] == "White":
-                                        image_path = "images/white_wine.png"
-                                    elif wine['Type'] == "Rosé":
-                                        image_path = "images/rose_wine.png"
-                                    elif wine['Type'] == "Sparkling":
-                                        image_path = "images/sparkling_wine.png"
-                                    elif wine['Type'] == "Dessert":
-                                        image_path = "images/dessert.png"
-                                    elif wine['Type'] == "Dessert/Port":
-                                        image_path = "images/port.png"
-                                    st.image(image_path, width=250)
+                        # 2. Stop audio
+                         st.components.v1.html("""
+                        <script>
+                            const audio = document.getElementById("temp-audio");
+                            if (audio) {
+                                audio.pause();
+                                audio.currentTime = 0;
+                                audio.remove();
+                            }
+                        </script>
+                        """, height=0)
+                    st.success(f"Here are your top {len(wines)} wine recommendations 🍷")
 
-                                with cols[1]:
-                                    st.markdown(f"""
-                                        ### {wine['WineName']}
-                                        - **Type**: {wine['Type']}
-                                        - **Grapes**: {", ".join(ast.literal_eval(wine['Grapes_list'])) if isinstance(wine['Grapes_list'], str) else wine['Grapes_list']}
-                                        - **Body**: {wine['Body']}
-                                        - **ABV**: {wine['ABV']}%
-                                        - **Region**: {wine['RegionName']}
-                                        - **Country**: {wine['Country']}
-                                        - **Similarity**: {wine['Similarity']:.2f}
-                                    """)
-                                    st.markdown("---")
+                    for wine in wines:
+                        with st.container():
+                            cols = st.columns([1, 4])
+                            with cols[0]:
+                                # Add vertical space above the image to lower its position
+                                st.markdown("<div style='height:40px;'></div>", unsafe_allow_html=True)
+                                if wine['Type'] == "Red":
+                                    image_path = "images/red_wine.png"
+                                elif wine['Type'] == "White":
+                                    image_path = "images/white_wine.png"
+                                elif wine['Type'] == "Rosé":
+                                    image_path = "images/rose_wine.png"
+                                elif wine['Type'] == "Sparkling":
+                                    image_path = "images/sparkling_wine.png"
+                                elif wine['Type'] == "Dessert":
+                                    image_path = "images/dessert.png"
+                                elif wine['Type'] == "Dessert/Port":
+                                    image_path = "images/port.png"
+                                st.image(image_path, width=250)
+
+                            with cols[1]:
+                                st.markdown(f"""
+                                    ### {wine['WineName']}
+                                    - **Type**: {wine['Type']}
+                                    - **Grapes**: {", ".join(ast.literal_eval(wine['Grapes_list'])) if isinstance(wine['Grapes_list'], str) else wine['Grapes_list']}
+                                    - **Body**: {wine['Body']}
+                                    - **ABV**: {wine['ABV']}%
+                                    - **Region**: {wine['RegionName']}
+                                    - **Country**: {wine['Country']}
+                                    - **Similarity**: {wine['Similarity']:.2f}
+                                """)
+                                st.markdown("---")
+
                 else:
                     st.error(f"API error: {response.status_code} – {response.text}")
             except Exception as e:
