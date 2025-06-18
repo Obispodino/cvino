@@ -3,7 +3,6 @@ import pandas as pd
 import os
 import ast
 import requests
-from cv_functions.wine_label_ai2 import extract_wine_info_from_image
 import ipdb
 import tempfile
 
@@ -320,45 +319,76 @@ if st.session_state.wine_page:
         "<h3 style='font-size:1.3rem;'>📸 Upload a Wine Picture</h3>",
         unsafe_allow_html=True
     )
-    upload_col, img_col = st.columns([1, 2])
+    # Three columns: left (upload + button), middle (image), right (wine info)
+    upload_col, img_col, info_col = st.columns([1, 1, 2])
+
     with upload_col:
         uploaded_image = st.file_uploader("Upload an image (optional)", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
+        send_to_api_clicked = st.button("Get wine info", disabled=(uploaded_image is None))
+
     with img_col:
         if uploaded_image is not None:
             st.image(uploaded_image, caption="Your uploaded image", width=150)
 
-    # Always show the button if an image is uploaded
-    send_to_api_clicked = st.button("Send to API", disabled=(uploaded_image is None))
+    with info_col:
+        if send_to_api_clicked and uploaded_image is not None:
+            img_bytes = uploaded_image.getvalue()
+            files = {'img': img_bytes}
+            #response = requests.post("https://cvino-api-224355531443.europe-west1.run.app/read_image", files=files)
+            response = requests.post("http://localhost:8000/read_image", files=files) # backend
+            if response.status_code == 200:
+                # st.success("Image successfully uploaded and processed!")
+                wine_info = response.json()
+                # Store extracted info in session_state so it persists after rerun
+                st.session_state['last_extracted_wine_info'] = wine_info
 
-    if send_to_api_clicked and uploaded_image is not None:
-        # Send image to FastAPI
-        files = {'img': (uploaded_image.name, uploaded_image, uploaded_image.type)}
-        response = requests.post("https://cvino-api-224355531443.europe-west1.run.app/read_image", files=files)
-        #response = requests.post("http://localhost:8502/", files=files)
-        if response.status_code == 200:
-            st.success("Image successfully uploaded and processed!")
-
-            wine_info = response.json()
-            wine_type_input = wine_info.get('wine_type')
-            grape_input = wine_info.get('grape_varieties')
-            body_input = wine_info.get('body')
-            acidity_input = wine_info.get('acidity')
-            country_input = wine_info.get('country')
-            region_input = wine_info.get('region')
-            abv_input = wine_info.get('ABV')
-
-            #st.markdown(win_info.get('message', 'Wine information extracted successfully!'), unsafe_allow_html=True)
-
-        else:
-            st.error(f"Failed to upload image: {response.json().get('message')}")
-
+                # Auto-fill Streamlit widgets with extracted info
+                # Use session_state to set default values for widgets
+                st.session_state['wine_type_input'] = wine_info['wine_type']
+                # grape_varieties may be a string or list
+                grapes = wine_info['grape_varieties']
+                if isinstance(grapes, str):
+                    grapes = [g.strip() for g in grapes.split(',')]
+                st.session_state['grape_input'] = grapes
+                st.session_state['country_input'] = wine_info['country']
+                st.session_state['region_input'] = wine_info['region']
+                st.session_state['body_input'] = wine_info['body']
+                st.session_state['acidity_input'] = wine_info['acidity']
+                try:
+                    st.session_state['abv_input'] = float(wine_info['ABV'])
+                except Exception:
+                    pass
+            else:
+                st.warning(f"Failed to upload image: {response.json().get('message')}")
+         # Always display extracted info if it exists
+        wine_info = st.session_state.get('last_extracted_wine_info')
+        if wine_info:
+            st.markdown("#### Extracted Wine Information")
+            st.markdown(f"**Wine Type:** {wine_info.get('wine_type', 'N/A')}")
+            st.markdown(f"**Grape Varieties:** {wine_info.get('grape_varieties', 'N/A')}")
+            st.markdown(f"**Body:** {wine_info.get('body', 'N/A')}")
+            st.markdown(f"**Acidity:** {wine_info.get('acidity', 'N/A')}")
+            st.markdown(f"**Country:** {wine_info.get('country', 'N/A')}")
+            st.markdown(f"**Region:** {wine_info.get('region', 'N/A')}")
+            st.markdown(f"**ABV:** {wine_info.get('ABV', 'N/A')}")
 
     col1, col2 = st.columns(2)
     with col1:
         # Autocomplete grape input using unique_grapes
+        if 'grape_input' in st.session_state:
+            # Ensure it's a list for multiselect
+            grape_default = st.session_state['grape_input']
+            if isinstance(grape_default, str):
+                grape_default = [g.strip() for g in grape_default.split(',')]
+            # Only keep grapes that are in unique_grapes
+            grape_default = [g for g in grape_default if g in unique_grapes]
+        else:
+            grape_default = []
+
         grape_input = st.multiselect(
             "Grape (start typing for suggestions)",
             options=unique_grapes,
+            default=grape_default,
             help="Start typing to select one or more grape varieties from our database."
         )
         # Convert multiselect list to comma-separated string (like text_input)
@@ -370,30 +400,91 @@ if st.session_state.wine_page:
 
         wine_name_input = None
 
-        country_options = sorted(df["Country"].dropna().unique().tolist())
-        country_input = st.selectbox("Country", country_options)
+        country_options = sorted(df["Country"].dropna().unique().tolist()) + [None]
+        if 'country_input' in st.session_state: # if detect country from image
+            default_country = st.session_state['country_input']
+        else:
+            default_country = None
+
+        default_country_index = country_options.index(default_country) if default_country in country_options else 1
+        country_input = st.selectbox("Country", country_options, index= default_country_index)
+
+
     with col2:
+        wine_type_box = df["Type"].dropna().unique().tolist()
+        if 'wine_type_input' in st.session_state: # if detect type from image
+            default_wine_type = st.session_state['wine_type_input']
+        else:
+            default_wine_type = "Red"
 
-        wine_type_input = st.selectbox("Type", df["Type"].dropna().unique().tolist(), index=1)
+        default_index = wine_type_box.index(default_wine_type) if default_wine_type in wine_type_box else 1
+        wine_type_input = st.selectbox("Type", wine_type_box, index= default_index)
 
+        region_options_all = df["RegionName"].dropna().unique().tolist() + [None]
         if country_input:
             region_options = sorted(country_to_regions[country_input])
-            region_input = st.selectbox("Region", region_options)
+
+            if 'region_input' in st.session_state: # if detect region from image
+                default_region = st.session_state['region_input']
+            else:
+                default_region = None
+
+            default_region_index = region_options.index(default_region) if default_region in region_options else len(region_options) - 1
+            region_input = st.selectbox("Region", region_options, index= default_region_index)
         else:
-            region_input = st.selectbox("Region", df["RegionName"].dropna().unique().tolist())
+            region_input = st.selectbox("Region", region_options_all, index= len(region_options_all) - 1)
 
 
     col3, col4 = st.columns(2)
     with col3:
+        # Use session_state value if available, else None
+        if 'body_input' in st.session_state:
+            body_default = st.session_state['body_input']
+        else:
+            body_default = "Medium-bodied"
+        body_options = ["Very light-bodied", "Light-bodied", "Medium-bodied", "Full-bodied", "Very full-bodied"] + [None]
+        # Find index if default exists, else None (which will default to first)
+        if body_default in body_options:
+            body_index = body_options.index(body_default)
+        else:
+            body_index = 2  # Default to "Medium-bodied"
         body_input = st.selectbox(
             "Body",
-            ["Very light-bodied", "Light-bodied", "Medium-bodied", "Full-bodied", "Very full-bodied"],
-            index=2  # 0-based index, so 2 is "Medium-bodied"
+            body_options,
+            index=body_index
         )
-    with col4:
-        abv_input = st.slider("ABV (%)", 5.0, 20.0, 13.5, step=0.1)
 
-    num_recommendations = st.number_input("How many wine recommendations?", 1, 50, 5, step=1)
+    with col4:
+        if 'abv_input' in st.session_state:
+            abv_default = st.session_state['abv_input']
+            # Clamp value to slider range
+            abv_default = max(5.0, min(20.0, float(abv_default)))
+        else:
+            abv_default = 13.5
+        abv_input = st.slider("ABV (%)", 5.0, 20.0, abv_default, step=0.1)
+
+    col5, col6 = st.columns(2)
+    with col5:
+        if 'acidity_input' in st.session_state:
+            acidity_default = st.session_state['acidity_input']
+        else:
+            acidity_default = None
+        acidity_options = ["High", "Medium", "Low"] + [None]
+        if acidity_default in acidity_options:
+            acidity_index = acidity_options.index(acidity_default)
+        else:
+            acidity_index = 1  # Default to "Medium"
+        acidity_input = st.selectbox(
+            "Acidity",
+            acidity_options,
+            index=acidity_index
+        )
+    with col6:
+        num_recommendations = st.number_input("How many wine recommendations?", 1, 50, 5, step=1)
+
+    # Place the button outside the info_col so it doesn't clear on rerun
+    # get_recommendations_clicked = st.button("🔎 Get Recommendations")
+
 
     if st.button("🔎 Get Recommendations"):
         st.components.v1.html("""
@@ -416,7 +507,7 @@ if st.session_state.wine_page:
 
             try:
                 response = requests.post(
-                    "https://cvino-api-224355531443.europe-west1.run.app/recommend-wines",
+                    "http://localhost:8000/recommend-wines",
                     json=payload
                 )
 
