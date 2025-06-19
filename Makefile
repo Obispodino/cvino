@@ -2,14 +2,14 @@
 #     Configuration    #
 #======================#
 
-GCP_PROJECT := wagon-bootcamp-457511
-GCP_REGION := europe-west1
-DOCKER_REPO_NAME := cvino-repo
-DOCKER_IMAGE_NAME := cvino-api
-DOCKER_LOCAL_PORT := 8080
-GAR_MEMORY := 2Gi
+# GCP_PROJECT := wagon-bootcamp-457511
+# GCP_REGION := europe-west1
+# DOCKER_REPO_NAME := cvino-repo
+# DOCKER_IMAGE_NAME := cvino-api
+# DOCKER_LOCAL_PORT := 8080
+# GAR_MEMORY := 2Gi
 
-DOCKER_IMAGE_PATH := $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(DOCKER_REPO_NAME)/$(DOCKER_IMAGE_NAME)
+# DOCKER_IMAGE_PATH := $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(DOCKER_REPO_NAME)/$(DOCKER_IMAGE_NAME)
 
 #======================#
 # Install, clean, test #
