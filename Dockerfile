@@ -2,7 +2,7 @@
 FROM python:3.11-slim
 
 # 2. ✅ Set working directory
-WORKDIR /app
+WORKDIR /API
 
 # 3. ✅ Copy and install dependencies
 COPY requirements.txt .
@@ -20,4 +20,5 @@ COPY images images
 COPY interface interface
 
 # 5. ✅ Define the entrypoint to run the API
+
 CMD uvicorn fast_api.app:app --host 0.0.0.0 --port $PORT
