@@ -75,25 +75,25 @@ def recommend_wines(request: WineRequest):
     if wine_metadata_df is None:
         raise HTTPException(status_code=500, detail="Metadata not loaded")
 
-    try:
-        result_df = get_wine_recommendations_by_characteristics(
-            wine_type=request.wine_type,
-            grape_varieties=request.grape_varieties,
-            body=request.body,
-            abv=request.abv,
-            acidity=request.acidity,
-            country=request.country,
-            region_name=request.region_name,
-            n_recommendations=request.n_recommendations,
-            metadata_df=wine_metadata_df,
-            model=model
-        )
-        if result_df.empty:
-            return {"message": "No recommendations found.", "wines": []}
+# try:
+    result_df = get_wine_recommendations_by_characteristics(
+        wine_type=request.wine_type,
+        grape_varieties=request.grape_varieties,
+        body=request.body,
+        abv=request.abv,
+        acidity=request.acidity,
+        country=request.country,
+        region_name=request.region_name,
+        n_recommendations=request.n_recommendations,
+        metadata_df=wine_metadata_df,
+        model=model
+    )
+    if result_df.empty:
+        return {"message": "No recommendations found.", "wines": []}
 
-        return {"wines": result_df.to_dict(orient="records")}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
+    return {"wines": result_df.to_dict(orient="records")}
+# except Exception as e:
+    raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
 
 @app.post("/recommend-by-food")
 def recommend_by_food(request: FoodWineRequest):

@@ -1,9 +1,13 @@
 # Ignore everything by default
 **
 
-# Allow key files and folders for backend API
+# Keep these files for deployment
 !requirements.txt
 !API/
 !cv_functions/
 !models/
-!raw_data/
+!raw_data/wine_metadata.csv
+!raw_data/geocoding_cache.pkl
+
+# Never include secrets
+.env

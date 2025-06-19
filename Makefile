@@ -1,23 +1,36 @@
 #======================#
+#     Configuration    #
+#======================#
+
+GCP_PROJECT := wagon-bootcamp-457511
+GCP_REGION := europe-west1
+DOCKER_REPO_NAME := cvino-repo
+DOCKER_IMAGE_NAME := cvino-api
+DOCKER_LOCAL_PORT := 8080
+GAR_MEMORY := 2Gi
+
+DOCKER_IMAGE_PATH := $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(DOCKER_REPO_NAME)/$(DOCKER_IMAGE_NAME)
+
+#======================#
 # Install, clean, test #
 #======================#
 
 install_requirements:
-	@pip install -r requirements.txt
+	pip install -r requirements.txt
 
 install:
-	@pip install . -U
+	pip install . -U
 
 clean:
-	@rm -f */version.txt
-	@rm -f .coverage
-	@rm -fr */__pycache__ */*.pyc __pycache__
-	@rm -fr build dist
-	@rm -fr proj-*.dist-info
-	@rm -fr proj.egg-info
+	rm -f */version.txt
+	rm -f .coverage
+	rm -fr */__pycache__ */*.pyc __pycache__
+	rm -fr build dist
+	rm -fr proj-*.dist-info
+	rm -fr proj.egg-info
 
 test_structure:
-	@bash tests/test_structure.sh
+	bash tests/test_structure.sh
 
 #======================#
 #          API         #
@@ -26,7 +39,6 @@ test_structure:
 run_api:
 	uvicorn API.fast:app --reload --port 8000
 
-
 #======================#
 #          GCP         #
 #======================#
@@ -34,15 +46,9 @@ run_api:
 gcloud-set-project:
 	gcloud config set project $(GCP_PROJECT)
 
-
-
 #======================#
 #         Docker       #
 #======================#
-
-# Local images - using local computer's architecture
-# i.e. linux/amd64 for Windows / Linux / Apple with Intel chip
-#      linux/arm64 for Apple with Apple Silicon (M1 / M2 chip)
 
 docker_build_local:
 	docker build --tag=$(DOCKER_IMAGE_NAME):local .
@@ -60,10 +66,6 @@ docker_run_local_interactively:
 		$(DOCKER_IMAGE_NAME):local \
 		bash
 
-# Cloud images - using architecture compatible with cloud, i.e. linux/amd64
-
-DOCKER_IMAGE_PATH := $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(DOCKER_REPO_NAME)/$(DOCKER_IMAGE_NAME)
-
 docker_show_image_path:
 	@echo $(DOCKER_IMAGE_PATH)
 
@@ -72,12 +74,13 @@ docker_build:
 		--platform linux/amd64 \
 		-t $(DOCKER_IMAGE_PATH):prod .
 
-# Alternative if previous doesn´t work. Needs additional setup.
-# Probably don´t need this. Used to build arm on linux amd64
 docker_build_alternative:
 	docker buildx build --load \
 		--platform linux/amd64 \
 		-t $(DOCKER_IMAGE_PATH):prod .
+
+docker_tag_local:
+	docker tag $(DOCKER_IMAGE_NAME):local $(DOCKER_IMAGE_PATH):prod
 
 docker_run:
 	docker run \
@@ -94,7 +97,9 @@ docker_run_interactively:
 		$(DOCKER_IMAGE_PATH):prod \
 		bash
 
-# Push and deploy to cloud
+#======================#
+#  Docker + Deployment #
+#======================#
 
 docker_allow:
 	gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev
