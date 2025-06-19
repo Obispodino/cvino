@@ -80,6 +80,7 @@ def recommend_wines(request: WineRequest):
     if app.state.wine_metadata_df is None:
         raise HTTPException(status_code=500, detail="Metadata not loaded")
 
+
     if app.state.model is None:
         raise HTTPException(status_code=500, detail="Model not loaded")
 
@@ -112,6 +113,7 @@ def recommend_wines(request: WineRequest):
         return {"wines": result_df.to_dict(orient="records")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
 
 @app.post("/recommend-by-food")
 def recommend_by_food(request: FoodWineRequest):

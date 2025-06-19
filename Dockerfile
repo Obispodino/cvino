@@ -6,8 +6,9 @@ WORKDIR /API
 
 # 3. ✅ Copy and install dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    rm -rf ~/.cache
 
 # 4. ✅ Copy your actual code
 COPY cv_functions cv_functions
@@ -19,7 +20,5 @@ COPY images images
 COPY interface interface
 
 # 5. ✅ Define the entrypoint to run the API
-CMD ["uvicorn", "API.fast:app", "--host", "0.0.0.0", "--port", "8000"]
 
-# 6. ✅ Expose the port the API runs on
-EXPOSE 8000
+CMD uvicorn fast_api.app:app --host 0.0.0.0 --port $PORT

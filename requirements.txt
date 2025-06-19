@@ -128,3 +128,6 @@ webencodings==0.5.1
 websocket-client==1.8.0
 widgetsnbextension==4.0.14
 geopy==2.4.1
+transformers==4.52.4
+dotenv==1.0.0
+python-multipart
