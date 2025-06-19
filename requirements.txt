@@ -108,7 +108,7 @@ six==1.17.0
 sniffio==1.3.1
 soupsieve==2.7
 stack-data==0.6.3
-streamlit==1.35.0
+streamlit
 terminado==0.18.1
 threadpoolctl==3.6.0
 tinycss2==1.4.0
@@ -121,7 +121,7 @@ typing-extensions==4.14.0
 tzdata==2025.2
 uri-template==1.3.0
 urllib3==2.4.0
-uvicorn[standard]
+uvicorn
 wcwidth==0.2.13
 webcolors==24.11.1
 webencodings==0.5.1
@@ -129,5 +129,5 @@ websocket-client==1.8.0
 widgetsnbextension==4.0.14
 geopy==2.4.1
 transformers==4.52.4
-dotenv==1.0.0
+dotenv
 python-multipart
