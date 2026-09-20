@@ -193,9 +193,9 @@ async def receive_image(img: UploadFile = File(...), n_recommendations: int = 5)
 
                 # Get recommendations
                 result_df = get_wine_recommendations_by_characteristics(
-                    wine_type=wine_info["wine_type"],
-                    grape_varieties=wine_info["grape_varieties"],
-                    body=wine_info["body"],
+                    wine_type=wine_info["wine_type"] or "Red",
+                    grape_varieties=wine_info["grape_varieties"] or None,
+                    body=wine_info["body"] or "Full-bodied",
                     abv=abv,
                     acidity=wine_info["acidity"],
                     country=wine_info["country"],
