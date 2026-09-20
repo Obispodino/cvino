@@ -14,6 +14,7 @@ RUN pip install --upgrade pip && \
 COPY cv_functions cv_functions
 COPY API API
 COPY raw_data raw_data
+COPY transformers transformers
 COPY models models
 
 # 5. ✅ Define the entrypoint to run the API

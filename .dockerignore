@@ -6,6 +6,7 @@
 !API/
 !cv_functions/
 !models/
+!transformers/
 !raw_data/
 raw_data/*
 !raw_data/wine_metadata.csv
