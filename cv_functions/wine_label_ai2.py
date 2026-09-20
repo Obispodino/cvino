@@ -70,7 +70,7 @@ Return the results in JSON format as specified."""
         # Try Claude 3 Haiku first (faster and cheaper for image recognition)
         try:
             message = client.messages.create(
-                model="claude-3-haiku-20240307",  # Using Claude 3 Haiku for image recognition
+                model="claude-haiku-4-5",  # Using Haiku for image recognition
                 max_tokens=1000,
                 system=system_prompt,
                 messages=[
@@ -97,7 +97,7 @@ Return the results in JSON format as specified."""
             # If Haiku fails, fallback to Sonnet 3.5
             print(f"Claude 3 Haiku failed, falling back to Sonnet 3.5: {haiku_error}")
             message = client.messages.create(
-                model="claude-3-5-sonnet-20241022",  # Fallback to Sonnet 3.5
+                model="claude-sonnet-4-5",  # Fallback to Sonnet
                 max_tokens=1000,
                 system=system_prompt,
                 messages=[
