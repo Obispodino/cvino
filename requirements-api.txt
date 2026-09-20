@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pandas==2.3.0
+numpy>=1.23.5,<2.0.0
+scikit-learn==1.7.0
+scipy==1.15.3
+joblib==1.5.1
+anthropic
+pillow==10.4.0
+geopy==2.4.1
+python-dotenv
+python-multipart
+ipdb

@@ -70,32 +70,61 @@ If information is not visible or unclear on the label, use null for that field. 
 Return the results in JSON format as specified."""
 
     try:
-        # Send request to Claude
-        message = client.messages.create(
-            model="claude-3-5-sonnet-20241022",  # Using latest Claude model
-            max_tokens=1000,
-            temperature=0,  # Low temperature for consistent extraction
-            system=system_prompt,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": "image/jpeg",
-                                "data": image_base64
+        # Try Claude 3 Haiku first (faster and cheaper for image recognition)
+        try:
+            message = client.messages.create(
+                model="claude-3-haiku-20240307",  # Using Claude 3 Haiku for image recognition
+                max_tokens=1000,
+                temperature=0,  # Low temperature for consistent extraction
+                system=system_prompt,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/jpeg",
+                                    "data": image_base64
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": user_prompt
                             }
-                        },
-                        {
-                            "type": "text",
-                            "text": user_prompt
-                        }
-                    ]
-                }
-            ]
-        )
+                        ]
+                    }
+                ]
+            )
+        except Exception as haiku_error:
+            # If Haiku fails, fallback to Sonnet 3.5
+            print(f"Claude 3 Haiku failed, falling back to Sonnet 3.5: {haiku_error}")
+            message = client.messages.create(
+                model="claude-3-5-sonnet-20241022",  # Fallback to Sonnet 3.5
+                max_tokens=1000,
+                temperature=0,  # Low temperature for consistent extraction
+                system=system_prompt,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/jpeg",
+                                    "data": image_base64
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": user_prompt
+                            }
+                        ]
+                    }
+                ]
+            )
 
         # Parse the response
         response_text = message.content[0].text
