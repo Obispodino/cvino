@@ -72,7 +72,6 @@ Return the results in JSON format as specified."""
             message = client.messages.create(
                 model="claude-3-haiku-20240307",  # Using Claude 3 Haiku for image recognition
                 max_tokens=1000,
-                temperature=0,  # Low temperature for consistent extraction
                 system=system_prompt,
                 messages=[
                     {
@@ -100,7 +99,6 @@ Return the results in JSON format as specified."""
             message = client.messages.create(
                 model="claude-3-5-sonnet-20241022",  # Fallback to Sonnet 3.5
                 max_tokens=1000,
-                temperature=0,  # Low temperature for consistent extraction
                 system=system_prompt,
                 messages=[
                     {
